@@ -1,9 +1,12 @@
 #include <iostream>
 #include <filesystem>
-
+#include <chrono>
+#include <thread>
 namespace fs=std::filesystem;
 
 int main(int args, char *argv[]){
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
     if(args<2){
         std::cout << "The program has one obligatory parameter which is <pattern(string)>" << std::endl;
         return 0;
@@ -36,5 +39,15 @@ int main(int args, char *argv[]){
     std::cout << LOG_FILE_NAME << std::endl;
     std::cout << RESULT_FILE_NAME << std::endl;
     std::cout << NUMBER_OF_THREADS << std::endl;
+
+    int searchedFiles=0, filesWithPattern=0, patternsNumber=0;
+    std::string resultFilePath, logFilePath;
+
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    long long int elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count();
+
+    std::cout << elapsed_time << std::endl;
+    std::cout << typeid(elapsed_time).name() << std::endl;
+
     return 0;
 }
