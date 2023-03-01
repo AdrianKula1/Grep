@@ -1,7 +1,10 @@
 #include <iostream>
 #include <filesystem>
-#include <chrono>
+#include <fstream>
 #include <thread>
+#include <string>
+#include <chrono>
+
 namespace fs=std::filesystem;
 
 int main(int args, char *argv[]){
@@ -42,6 +45,30 @@ int main(int args, char *argv[]){
 
     int searchedFiles=0, filesWithPattern=0, patternsNumber=0;
     std::string resultFilePath, logFilePath;
+
+    for(const fs::directory_entry& entry : fs::recursive_directory_iterator(START_DIRECTORY)){
+        std::cout << entry.path() << std::endl;
+        if(entry.is_regular_file()){
+            std::ifstream file;
+            file.open(entry.path());
+            if(file.good()){
+                std::string line;
+                unsigned int lineRow=-1, lineColumn=-1;
+                while(std::getline(file, line)){
+                    lineRow++;
+                    lineColumn = line.find("Adi");
+                    if(lineColumn!=std::string::npos){
+                        std::cout << line << std::endl;
+                        std::cout << lineRow << " " << lineColumn << std::endl;
+                    }
+                }
+            }
+        }
+
+
+    }
+
+
 
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     long long int elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count();
