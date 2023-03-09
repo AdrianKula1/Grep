@@ -17,30 +17,37 @@ private:
     long noThreads;
     unsigned int searchedFiles=0, filesWithPattern=0, patternsNumber=0;
 
+    std::string stringToFind;
+
     std::vector<std::thread> threads;
     std::queue<fs::path> paths;
     std::mutex mutex;
 
-    std::map<fs::path, std::pair<unsigned int, std::string>> resultData;
+    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> resultData;
     std::map<std::thread::id, std::vector<fs::path>> logData;
 
 
 public:
-    threadPool(long noThreads){
+    threadPool(long noThreads, std::string& stringToFind){
         this->noThreads=noThreads;
-        threads.reserve(noThreads);
+        this->threads.reserve(noThreads);
+        this->stringToFind=stringToFind;
     }
 
+
+
     void addPathToQueue(const fs::path& pathToFile){
-        paths.push(pathToFile);
+        this->paths.push(pathToFile);
     }
 
     void beginWork(){
+        this->searchedFiles+=this->paths.size();
         for(int i=0; i<noThreads; i++){
-            threads.emplace_back(&threadPool::worker, this);
-            threads[i].join();
+            this->threads.emplace_back(&threadPool::worker, this);
+            this->threads[i].join();
         }
-        searchedFiles+=paths.size();
+
+
     }
 
     void worker(){
@@ -48,17 +55,16 @@ public:
         if(!paths.empty()){
             fs::path pathToFile = paths.front();
             paths.pop();
-            logData[std::this_thread::get_id()].push_back(pathToFile);
-
             std::ifstream file;
             file.open(pathToFile);
             if(file.good()){
+                logData[std::this_thread::get_id()].push_back(pathToFile);
                 bool foundLine=false;
                 std::string line;
                 unsigned int lineRow=-1, lineColumn=-1;
                 while(std::getline(file, line)){
                     lineRow++;
-                    lineColumn = line.find("Adi");
+                    lineColumn = line.find(stringToFind);
                     if(lineColumn!=std::string::npos){
                         if(!foundLine){
                             foundLine=true;
@@ -67,11 +73,11 @@ public:
                         patternsNumber++;
                         std::cout << line << std::endl;
                         std::cout << lineRow << " " << lineColumn << std::endl;
-                        resultData[pathToFile].first=lineColumn;
-                        resultData[pathToFile].second=line;
+                        resultData[pathToFile].emplace_back(std::make_pair(lineColumn, line));
                     }
                 }
             }
+            file.close();
         }
         mutex.unlock();
     }
@@ -88,7 +94,7 @@ public:
         return this->patternsNumber;
     }
 
-    std::map<fs::path, std::pair<unsigned int, std::string>> getResultData(){
+    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> getResultData(){
         return resultData;
     }
     std::map<std::thread::id, std::vector<fs::path>> getLogData(){
@@ -104,7 +110,10 @@ int main(int args, char *argv[]){
         std::cout << "The program has one obligatory parameter which is <pattern(string)>" << std::endl;
         return 0;
     }
+
+
     //default parameters
+    std::string STRING_TO_FIND = (std::string)argv[1];
     std::string START_DIRECTORY = fs::current_path().string();
     std::string LOG_FILE_NAME = std::filesystem::path(argv[0]).filename().string()+".log";
     std::string RESULT_FILE_NAME = std::filesystem::path(argv[0]).filename().string()+".txt";
@@ -133,7 +142,7 @@ int main(int args, char *argv[]){
     std::cout << RESULT_FILE_NAME << std::endl;
     std::cout << NUMBER_OF_THREADS << std::endl;
 
-    threadPool pool(NUMBER_OF_THREADS);
+    threadPool pool(NUMBER_OF_THREADS, STRING_TO_FIND);
 
 
     std::string resultFilePath, logFilePath;
@@ -152,15 +161,46 @@ int main(int args, char *argv[]){
     unsigned int patternsNumber = pool.getPatternsNumber();
 
 
-    std::map<fs::path, std::pair<unsigned int, std::string>> resultData = pool.getResultData();
+    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> resultData = pool.getResultData();
     std::map<std::thread::id, std::vector<fs::path>> logData = pool.getLogData();
 
+    //Results
+    std::cout << "Searched files: " << searchedFiles << std::endl;
+    std::cout << "Files with pattern: " << filesWithPattern << std::endl;
+    std::cout << "Patterns number: " << patternsNumber << std::endl;
+
+    std::ofstream resultFile(RESULT_FILE_NAME);
+    if(resultFile.is_open()){
+        for(auto &path: resultData){
+            for (auto &numberAndLine: path.second){
+                resultFile << path.first << ':' << numberAndLine.first << ": " << numberAndLine.second << std::endl;
+            }
+        }
+    }
+    resultFile.close();
+
+    std::cout << "Result file: " << RESULT_FILE_NAME << std::endl;
+
+
+    std::ofstream logFile(LOG_FILE_NAME);
+    if(logFile.is_open()){
+        for(auto &threadData: logData){
+            logFile << threadData.first;
+            for (auto &filePath: threadData.second){
+                logFile << filePath << ':' ;
+            }
+            logFile << std::endl;
+        }
+    }
+    logFile.close();
+
+    std::cout << "Log file: " << LOG_FILE_NAME << std::endl;
+    std::cout << "Used threads: " << NUMBER_OF_THREADS << std::endl;
 
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    long long int elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count();
+    long long int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count();
 
-    std::cout << elapsed_time << std::endl;
-    std::cout << typeid(elapsed_time).name() << std::endl;
+    std::cout << "Elapsed time: " << elapsedTime << std::endl;
 
     return 0;
 }
