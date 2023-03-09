@@ -45,7 +45,31 @@ public:
 
     void worker(){
         mutex.lock();
+        fs::path pathToFile = paths.front();
+        logData[std::this_thread::get_id()].push_back(pathToFile);
 
+        std::ifstream file;
+        file.open(pathToFile);
+        if(file.good()){
+            bool foundLine=false;
+            std::string line;
+            unsigned int lineRow=-1, lineColumn=-1;
+            while(std::getline(file, line)){
+                lineRow++;
+                lineColumn = line.find("Adi");
+                if(lineColumn!=std::string::npos){
+                    if(!foundLine){
+                        foundLine=true;
+                        filesWithPattern++;
+                    }
+                    patternsNumber++;
+                    std::cout << line << std::endl;
+                    std::cout << lineRow << " " << lineColumn << std::endl;
+                    resultData[pathToFile].first=lineColumn;
+                    resultData[pathToFile].second=line;
+                }
+            }
+        }
         mutex.unlock();
     }
 };
