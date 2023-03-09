@@ -31,6 +31,23 @@ public:
         threads.reserve(noThreads);
     }
 
+    void addPathToQueue(const fs::path& pathToFile){
+        paths.push(pathToFile);
+    }
+
+    void beginWork(){
+        for(int i=0; i<noThreads; i++){
+            threads.emplace_back(&threadPool::worker, this);
+            threads[i].join();
+        }
+        searchedFiles+=paths.size();
+    }
+
+    void worker(){
+        mutex.lock();
+
+        mutex.unlock();
+    }
 };
 
 int main(int args, char *argv[]){
