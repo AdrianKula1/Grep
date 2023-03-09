@@ -72,6 +72,26 @@ public:
         }
         mutex.unlock();
     }
+
+    unsigned int getSearchedFiles(){
+        return this->searchedFiles;
+    }
+
+    unsigned int getfilesWithPattern(){
+        return this->filesWithPattern;
+    }
+
+    unsigned int getpatternsNumber(){
+        return this->patternsNumber;
+    }
+
+    std::map<fs::path, std::pair<unsigned int, std::string>> getResultData(){
+        return resultData;
+    }
+    std::map<std::thread::id, std::vector<fs::path>> getLogData(){
+        return logData;
+    }
+
 };
 
 int main(int args, char *argv[]){
@@ -116,7 +136,6 @@ int main(int args, char *argv[]){
     std::string resultFilePath, logFilePath;
     for(const fs::directory_entry& entry : fs::recursive_directory_iterator(START_DIRECTORY)){
         std::cout << entry.path() << std::endl;
-
         if(entry.is_regular_file()){
             pool.addPathToQueue(entry.path());
         }
