@@ -2,10 +2,36 @@
 #include <filesystem>
 #include <fstream>
 #include <thread>
+#include <mutex>
 #include <string>
+#include <queue>
 #include <chrono>
+#include <map>
 
 namespace fs=std::filesystem;
+
+
+
+class threadPool{
+private:
+    long noThreads;
+    unsigned int searchedFiles=0, filesWithPattern=0, patternsNumber=0;
+
+    std::vector<std::thread> threads;
+    std::queue<fs::path> paths;
+    std::mutex mutex;
+
+    std::map<fs::path, std::pair<unsigned int, std::string>> resultData;
+    std::map<std::thread::id, std::vector<fs::path>> logData;
+
+
+public:
+    threadPool(long noThreads){
+        this->noThreads=noThreads;
+        threads.reserve(noThreads);
+    }
+
+};
 
 int main(int args, char *argv[]){
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -43,32 +69,19 @@ int main(int args, char *argv[]){
     std::cout << RESULT_FILE_NAME << std::endl;
     std::cout << NUMBER_OF_THREADS << std::endl;
 
-    int searchedFiles=0, filesWithPattern=0, patternsNumber=0;
-    std::string resultFilePath, logFilePath;
+    threadPool pool(NUMBER_OF_THREADS);
 
+
+    std::string resultFilePath, logFilePath;
     for(const fs::directory_entry& entry : fs::recursive_directory_iterator(START_DIRECTORY)){
         std::cout << entry.path() << std::endl;
+
         if(entry.is_regular_file()){
-            std::ifstream file;
-            file.open(entry.path());
-            if(file.good()){
-                std::string line;
-                unsigned int lineRow=-1, lineColumn=-1;
-                while(std::getline(file, line)){
-                    lineRow++;
-                    lineColumn = line.find("Adi");
-                    if(lineColumn!=std::string::npos){
-                        std::cout << line << std::endl;
-                        std::cout << lineRow << " " << lineColumn << std::endl;
-                    }
-                }
-            }
+            pool.addPathToQueue(entry.path());
         }
-
-
     }
 
-
+    pool.beginWork();
 
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     long long int elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count();
