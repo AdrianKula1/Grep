@@ -45,28 +45,31 @@ public:
 
     void worker(){
         mutex.lock();
-        fs::path pathToFile = paths.front();
-        logData[std::this_thread::get_id()].push_back(pathToFile);
+        if(!paths.empty()){
+            fs::path pathToFile = paths.front();
+            paths.pop();
+            logData[std::this_thread::get_id()].push_back(pathToFile);
 
-        std::ifstream file;
-        file.open(pathToFile);
-        if(file.good()){
-            bool foundLine=false;
-            std::string line;
-            unsigned int lineRow=-1, lineColumn=-1;
-            while(std::getline(file, line)){
-                lineRow++;
-                lineColumn = line.find("Adi");
-                if(lineColumn!=std::string::npos){
-                    if(!foundLine){
-                        foundLine=true;
-                        filesWithPattern++;
+            std::ifstream file;
+            file.open(pathToFile);
+            if(file.good()){
+                bool foundLine=false;
+                std::string line;
+                unsigned int lineRow=-1, lineColumn=-1;
+                while(std::getline(file, line)){
+                    lineRow++;
+                    lineColumn = line.find("Adi");
+                    if(lineColumn!=std::string::npos){
+                        if(!foundLine){
+                            foundLine=true;
+                            filesWithPattern++;
+                        }
+                        patternsNumber++;
+                        std::cout << line << std::endl;
+                        std::cout << lineRow << " " << lineColumn << std::endl;
+                        resultData[pathToFile].first=lineColumn;
+                        resultData[pathToFile].second=line;
                     }
-                    patternsNumber++;
-                    std::cout << line << std::endl;
-                    std::cout << lineRow << " " << lineColumn << std::endl;
-                    resultData[pathToFile].first=lineColumn;
-                    resultData[pathToFile].second=line;
                 }
             }
         }
@@ -77,11 +80,11 @@ public:
         return this->searchedFiles;
     }
 
-    unsigned int getfilesWithPattern(){
+    unsigned int getDilesWithPattern(){
         return this->filesWithPattern;
     }
 
-    unsigned int getpatternsNumber(){
+    unsigned int getPatternsNumber(){
         return this->patternsNumber;
     }
 
@@ -142,6 +145,16 @@ int main(int args, char *argv[]){
     }
 
     pool.beginWork();
+
+
+    unsigned int searchedFiles = pool.getSearchedFiles();
+    unsigned int filesWithPattern = pool.getDilesWithPattern();
+    unsigned int patternsNumber = pool.getPatternsNumber();
+
+
+    std::map<fs::path, std::pair<unsigned int, std::string>> resultData = pool.getResultData();
+    std::map<std::thread::id, std::vector<fs::path>> logData = pool.getLogData();
+
 
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     long long int elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count();
