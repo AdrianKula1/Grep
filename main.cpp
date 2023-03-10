@@ -64,13 +64,13 @@ public:
             //std::unique_lock<std::mutex> lock(mutexes[id]);
 
             //emptyQueueCondition.wait(lock, [this]() { return !paths.empty(); });
-            std::unique_lock<std::mutex> lock(mut);
+
 
             if(!paths.empty()){
                 fs::path pathToFile = paths.front();
                 paths.pop();
 
-
+                std::unique_lock<std::mutex> lock(mut);
 
                 std::ifstream file;
                 file.open(pathToFile);
@@ -97,27 +97,26 @@ public:
                 }
 
             }
-            std::this_thread::sleep_for(std::chrono::seconds(3));
         }
 
     }
 
-    unsigned int getSearchedFiles(){
+    unsigned int getSearchedFiles() const{
         return this->searchedFiles;
     }
 
-    unsigned int getDilesWithPattern(){
+    unsigned int getDilesWithPattern() const{
         return this->filesWithPattern;
     }
 
-    unsigned int getPatternsNumber(){
+    unsigned int getPatternsNumber() const{
         return this->patternsNumber;
     }
 
-    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> getResultData(){
+    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> getResultData() const{
         return resultData;
     }
-    std::map<std::thread::id, std::vector<fs::path>> getLogData(){
+    std::map<std::thread::id, std::vector<fs::path>> getLogData() const{
         return logData;
     }
 
