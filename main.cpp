@@ -24,13 +24,9 @@ private:
     std::thread directorySearcher;
     std::queue<fs::path> paths;
 
-    //zamiast to zapamiętywać mógłbym na bierząco dodawać dane w wątkach
     std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> resultData;
     std::map<std::thread::id, std::vector<fs::path>> logData;
 
-    std::condition_variable emptyQueueCondition;
-
-    std::mutex mut;
     std::mutex *mutexes;
 public:
     threadPool(long noThreads, std::string& stringToFind){
@@ -60,7 +56,8 @@ public:
 
     void fileSearcher(int id){
         while(!paths.empty()){
-            std::unique_lock<std::mutex> lock(mutexes[id]);
+            std::lock_guard<std::mutex> lock(mutexes[id]);
+
 
             if(!paths.empty()){
                 fs::path pathToFile = paths.front();
@@ -69,7 +66,7 @@ public:
                 std::ifstream file;
                 file.open(pathToFile);
                 if(file.good()) {
-                    logData[std::this_thread::get_id()].push_back(pathToFile);
+                    logData[std::this_thread::get_id()].push_back(pathToFile.filename());
                     bool foundLine = false;
                     std::string line;
                     unsigned int lineRow = -1, lineColumn = -1;
@@ -83,6 +80,7 @@ public:
                             }
                             patternsNumber++;
                             resultData[pathToFile].emplace_back(std::make_pair(lineColumn, line));
+
                         }
                     }
                     file.close();
@@ -90,7 +88,6 @@ public:
 
             }
         }
-
     }
 
     unsigned int getSearchedFiles() const{
@@ -180,8 +177,8 @@ int main(int args, char *argv[]){
     if(logFile.is_open()){
         for(auto &threadData: logData){
             logFile << threadData.first << ": ";
-            for (auto &filePath: threadData.second){
-                logFile << filePath.filename() << ',' ;
+            for (auto &filename: threadData.second){
+                logFile << filename << ',' ;
             }
             logFile << std::endl;
         }
