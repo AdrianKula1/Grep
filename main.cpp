@@ -5,7 +5,6 @@
 #include <mutex>
 #include <string>
 #include <queue>
-#include <chrono>
 #include <map>
 
 namespace fs=std::filesystem;
@@ -35,7 +34,6 @@ public:
     }
 
 
-
     void addPathToQueue(const fs::path& pathToFile){
         this->paths.push(pathToFile);
     }
@@ -44,42 +42,47 @@ public:
         this->searchedFiles+=this->paths.size();
         for(int i=0; i<noThreads; i++){
             this->threads.emplace_back(&threadPool::worker, this);
-            this->threads[i].join();
         }
 
-
+        for(int i=0; i<noThreads; i++){
+            this->threads[i].join();
+        }
     }
 
     void worker(){
-        mutex.lock();
-        if(!paths.empty()){
+        while(!paths.empty()){
+
             fs::path pathToFile = paths.front();
             paths.pop();
+
+            mutex.lock();
+
             std::ifstream file;
             file.open(pathToFile);
-            if(file.good()){
+            if(file.good()) {
                 logData[std::this_thread::get_id()].push_back(pathToFile);
-                bool foundLine=false;
+                bool foundLine = false;
                 std::string line;
-                unsigned int lineRow=-1, lineColumn=-1;
-                while(std::getline(file, line)){
+                unsigned int lineRow = -1, lineColumn = -1;
+                while (std::getline(file, line)) {
                     lineRow++;
                     lineColumn = line.find(stringToFind);
-                    if(lineColumn!=std::string::npos){
-                        if(!foundLine){
-                            foundLine=true;
+                    if (lineColumn != std::string::npos) {
+                        if (!foundLine) {
+                            foundLine = true;
                             filesWithPattern++;
                         }
                         patternsNumber++;
-                        std::cout << line << std::endl;
-                        std::cout << lineRow << " " << lineColumn << std::endl;
                         resultData[pathToFile].emplace_back(std::make_pair(lineColumn, line));
                     }
                 }
-            }
+            //}
+            std::cout << "this thread " << std::this_thread::get_id() << " closed file" << std::endl;
             file.close();
+            }
+            mutex.unlock();
         }
-        mutex.unlock();
+
     }
 
     unsigned int getSearchedFiles(){
@@ -111,7 +114,6 @@ int main(int args, char *argv[]){
         return 0;
     }
 
-
     //default parameters
     std::string STRING_TO_FIND = (std::string)argv[1];
     std::string START_DIRECTORY = fs::current_path().string();
@@ -137,17 +139,11 @@ int main(int args, char *argv[]){
             }
         }
     }
-    std::cout << START_DIRECTORY << std::endl;
-    std::cout << LOG_FILE_NAME << std::endl;
-    std::cout << RESULT_FILE_NAME << std::endl;
-    std::cout << NUMBER_OF_THREADS << std::endl;
 
     threadPool pool(NUMBER_OF_THREADS, STRING_TO_FIND);
 
-
     std::string resultFilePath, logFilePath;
     for(const fs::directory_entry& entry : fs::recursive_directory_iterator(START_DIRECTORY)){
-        std::cout << entry.path() << std::endl;
         if(entry.is_regular_file()){
             pool.addPathToQueue(entry.path());
         }
@@ -155,52 +151,46 @@ int main(int args, char *argv[]){
 
     pool.beginWork();
 
-
     unsigned int searchedFiles = pool.getSearchedFiles();
     unsigned int filesWithPattern = pool.getDilesWithPattern();
     unsigned int patternsNumber = pool.getPatternsNumber();
 
-
     std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> resultData = pool.getResultData();
     std::map<std::thread::id, std::vector<fs::path>> logData = pool.getLogData();
-
-    //Results
-    std::cout << "Searched files: " << searchedFiles << std::endl;
-    std::cout << "Files with pattern: " << filesWithPattern << std::endl;
-    std::cout << "Patterns number: " << patternsNumber << std::endl;
 
     std::ofstream resultFile(RESULT_FILE_NAME);
     if(resultFile.is_open()){
         for(auto &path: resultData){
             for (auto &numberAndLine: path.second){
-                resultFile << path.first << ':' << numberAndLine.first << ": " << numberAndLine.second << std::endl;
+                resultFile << path.first.string() << ':' << numberAndLine.first << ": " << numberAndLine.second << std::endl;
             }
         }
     }
     resultFile.close();
 
-    std::cout << "Result file: " << RESULT_FILE_NAME << std::endl;
-
 
     std::ofstream logFile(LOG_FILE_NAME);
     if(logFile.is_open()){
         for(auto &threadData: logData){
-            logFile << threadData.first;
+            logFile << threadData.first << ": ";
             for (auto &filePath: threadData.second){
-                logFile << filePath << ':' ;
+                logFile << filePath.filename() << ',' ;
             }
             logFile << std::endl;
         }
     }
     logFile.close();
 
-    std::cout << "Log file: " << LOG_FILE_NAME << std::endl;
-    std::cout << "Used threads: " << NUMBER_OF_THREADS << std::endl;
-
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     long long int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin).count();
 
-    std::cout << "Elapsed time: " << elapsedTime << std::endl;
+    std::cout << "Searched files: " << searchedFiles << std::endl;
+    std::cout << "Files with pattern: " << filesWithPattern << std::endl;
+    std::cout << "Patterns number: " << patternsNumber << std::endl;
+    std::cout << "Result file: " << RESULT_FILE_NAME << std::endl;
+    std::cout << "Log file: " << LOG_FILE_NAME << std::endl;
+    std::cout << "Used threads: " << NUMBER_OF_THREADS << std::endl;
+    std::cout << "Elapsed time: " << elapsedTime  << "[ms]"<< std::endl;
 
     return 0;
 }
