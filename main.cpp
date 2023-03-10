@@ -31,7 +31,7 @@ private:
     std::condition_variable emptyQueueCondition;
 
     std::mutex mut;
-    //std::mutex *mutexes;
+    std::mutex *mutexes;
 public:
     threadPool(long noThreads, std::string& stringToFind, std::string& startingDirectory){
         this->noThreads=noThreads;
@@ -39,7 +39,7 @@ public:
         this->stringToFind=stringToFind;
         this->startingDirectory=startingDirectory;
 
-        //this->mutexes = new std::mutex[noThreads];
+        this->mutexes = new std::mutex[noThreads];
     }
 
 
@@ -61,16 +61,11 @@ public:
 
     void fileSearcher(int id){
         while(!paths.empty()){
-            //std::unique_lock<std::mutex> lock(mutexes[id]);
-
-            //emptyQueueCondition.wait(lock, [this]() { return !paths.empty(); });
-
-
             if(!paths.empty()){
                 fs::path pathToFile = paths.front();
                 paths.pop();
 
-                std::unique_lock<std::mutex> lock(mut);
+                std::unique_lock<std::mutex> lock(mutexes[id]);
 
                 std::ifstream file;
                 file.open(pathToFile);
@@ -91,8 +86,6 @@ public:
                             resultData[pathToFile].emplace_back(std::make_pair(lineColumn, line));
                         }
                     }
-                    //}
-                    std::cout << "this thread " << std::this_thread::get_id() << " closed file" << std::endl;
                     file.close();
                 }
 
