@@ -60,11 +60,11 @@ public:
 
     void fileSearcher(int id){
         while(!paths.empty()){
+            std::unique_lock<std::mutex> lock(mutexes[id]);
+
             if(!paths.empty()){
                 fs::path pathToFile = paths.front();
                 paths.pop();
-
-                std::unique_lock<std::mutex> lock(mutexes[id]);
 
                 std::ifstream file;
                 file.open(pathToFile);
