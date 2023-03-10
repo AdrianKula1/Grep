@@ -11,7 +11,6 @@
 namespace fs=std::filesystem;
 
 
-
 class threadPool{
 private:
     long noThreads;
@@ -37,7 +36,6 @@ public:
         this->mutexes = new std::mutex[noThreads];
     }
 
-
     void addPathToQueue(const fs::path& pathToFile){
         this->paths.push(pathToFile);
     }
@@ -53,40 +51,44 @@ public:
         }
     }
 
-
     void fileSearcher(int id){
         while(!paths.empty()){
             std::lock_guard<std::mutex> lock(mutexes[id]);
 
+            if(paths.empty())
+                return;
 
-            if(!paths.empty()){
-                fs::path pathToFile = paths.front();
-                paths.pop();
+            fs::path pathToFile = paths.front();
+            paths.pop();
 
-                std::ifstream file;
-                file.open(pathToFile);
-                if(file.good()) {
-                    logData[std::this_thread::get_id()].push_back(pathToFile.filename());
-                    bool foundLine = false;
-                    std::string line;
-                    unsigned int lineRow = -1, lineColumn = -1;
-                    while (std::getline(file, line)) {
-                        lineRow++;
-                        lineColumn = line.find(stringToFind);
-                        if (lineColumn != std::string::npos) {
-                            if (!foundLine) {
-                                foundLine = true;
-                                filesWithPattern++;
-                            }
-                            patternsNumber++;
-                            resultData[pathToFile].emplace_back(std::make_pair(lineColumn, line));
+            std::ifstream file;
+            file.open(pathToFile);
 
-                        }
+            if(!file.good())
+                continue;
+
+            logData[std::this_thread::get_id()].push_back(pathToFile.filename());
+
+            bool fileHasPattern = false;
+            std::string line;
+            unsigned int lineRow = 0, lineColumn = 0;
+
+            while (std::getline(file, line)) {
+                lineColumn = line.find(stringToFind);
+
+                if (lineColumn != std::string::npos) {
+                    if (!fileHasPattern) {
+                        fileHasPattern = true;
+                        filesWithPattern++;
                     }
-                    file.close();
-                }
 
+                    patternsNumber++;
+                    resultData[pathToFile].emplace_back(std::make_pair(lineColumn, line));
+                }
+                lineRow++;
             }
+            file.close();
+
         }
     }
 
