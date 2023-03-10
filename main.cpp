@@ -6,13 +6,18 @@
 #include <string>
 #include <queue>
 #include <map>
-#include <condition_variable>
 
 namespace fs=std::filesystem;
 
+bool compareLogData(std::pair<std::thread::id, std::vector<fs::path>>& a,
+        std::pair<std::thread::id, std::vector<fs::path>>& b)
+{
+    return a.second.size() > b.second.size();
+}
 
 class threadPool{
 private:
+
     long noThreads;
     unsigned int searchedFiles=0, filesWithPattern=0, patternsNumber=0;
 
@@ -26,14 +31,17 @@ private:
     std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> resultData;
     std::map<std::thread::id, std::vector<fs::path>> logData;
 
-    std::mutex *mutexes;
+    std::mutex *searchMutexes;
+    std::mutex m;
+
+
 public:
     threadPool(long noThreads, std::string& stringToFind){
         this->noThreads=noThreads;
         this->threads.reserve(noThreads);
         this->stringToFind=stringToFind;
 
-        this->mutexes = new std::mutex[noThreads];
+        this->searchMutexes = new std::mutex[noThreads];
     }
 
     void addPathToQueue(const fs::path& pathToFile){
@@ -42,18 +50,19 @@ public:
 
     void beginWork(){
         this->searchedFiles+=this->paths.size();
-        for(int i=0; i<noThreads; i++){
+        for(int i=0; i<noThreads; i++)
             this->threads.emplace_back(&threadPool::fileSearcher, this, i);
-        }
 
-        for(int i=0; i<noThreads; i++){
+
+        for(int i=0; i<noThreads; i++)
             this->threads[i].join();
-        }
+
     }
 
     void fileSearcher(int id){
+        logData[std::this_thread::get_id()];
         while(!paths.empty()){
-            std::lock_guard<std::mutex> lock(mutexes[id]);
+            std::lock_guard<std::mutex> lock(searchMutexes[id]);
 
             if(paths.empty())
                 return;
@@ -112,6 +121,8 @@ public:
     }
 
 };
+
+
 
 int main(int args, char *argv[]){
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -175,9 +186,16 @@ int main(int args, char *argv[]){
     resultFile.close();
 
 
+    std::vector<std::pair<std::thread::id, std::vector<fs::path>>> logDataVector;
+    for(auto &data : logData){
+        logDataVector.emplace_back(data);
+    }
+
+    std::sort(logDataVector.begin(), logDataVector.end(), compareLogData);
+
     std::ofstream logFile(LOG_FILE_NAME);
     if(logFile.is_open()){
-        for(auto &threadData: logData){
+        for(auto &threadData: logDataVector){
             logFile << threadData.first << ": ";
             for (auto &filename: threadData.second){
                 logFile << filename << ',' ;
