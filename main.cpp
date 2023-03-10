@@ -33,11 +33,10 @@ private:
     std::mutex mut;
     std::mutex *mutexes;
 public:
-    threadPool(long noThreads, std::string& stringToFind, std::string& startingDirectory){
+    threadPool(long noThreads, std::string& stringToFind){
         this->noThreads=noThreads;
         this->threads.reserve(noThreads);
         this->stringToFind=stringToFind;
-        this->startingDirectory=startingDirectory;
 
         this->mutexes = new std::mutex[noThreads];
     }
@@ -149,7 +148,7 @@ int main(int args, char *argv[]){
         }
     }
 
-    threadPool pool(NUMBER_OF_THREADS, STRING_TO_FIND, START_DIRECTORY);
+    threadPool pool(NUMBER_OF_THREADS, STRING_TO_FIND);
 
     for(const fs::directory_entry& entry : fs::recursive_directory_iterator(START_DIRECTORY)){
         if(entry.is_regular_file()){
