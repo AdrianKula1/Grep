@@ -6,6 +6,7 @@
 #include <string>
 #include <queue>
 #include <map>
+#include <condition_variable>
 
 namespace fs=std::filesystem;
 
@@ -17,20 +18,28 @@ private:
     unsigned int searchedFiles=0, filesWithPattern=0, patternsNumber=0;
 
     std::string stringToFind;
+    std::string startingDirectory;
 
     std::vector<std::thread> threads;
+    std::thread directorySearcher;
     std::queue<fs::path> paths;
-    std::mutex mutex;
 
+    //zamiast to zapamiętywać mógłbym na bierząco dodawać dane w wątkach
     std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> resultData;
     std::map<std::thread::id, std::vector<fs::path>> logData;
 
+    std::condition_variable emptyQueueCondition;
 
+    std::mutex mut;
+    //std::mutex *mutexes;
 public:
-    threadPool(long noThreads, std::string& stringToFind){
+    threadPool(long noThreads, std::string& stringToFind, std::string& startingDirectory){
         this->noThreads=noThreads;
         this->threads.reserve(noThreads);
         this->stringToFind=stringToFind;
+        this->startingDirectory=startingDirectory;
+
+        //this->mutexes = new std::mutex[noThreads];
     }
 
 
@@ -41,7 +50,7 @@ public:
     void beginWork(){
         this->searchedFiles+=this->paths.size();
         for(int i=0; i<noThreads; i++){
-            this->threads.emplace_back(&threadPool::worker, this);
+            this->threads.emplace_back(&threadPool::fileSearcher, this, i);
         }
 
         for(int i=0; i<noThreads; i++){
@@ -49,38 +58,46 @@ public:
         }
     }
 
-    void worker(){
+
+    void fileSearcher(int id){
         while(!paths.empty()){
+            //std::unique_lock<std::mutex> lock(mutexes[id]);
 
-            fs::path pathToFile = paths.front();
-            paths.pop();
+            //emptyQueueCondition.wait(lock, [this]() { return !paths.empty(); });
+            std::unique_lock<std::mutex> lock(mut);
 
-            mutex.lock();
+            if(!paths.empty()){
+                fs::path pathToFile = paths.front();
+                paths.pop();
 
-            std::ifstream file;
-            file.open(pathToFile);
-            if(file.good()) {
-                logData[std::this_thread::get_id()].push_back(pathToFile);
-                bool foundLine = false;
-                std::string line;
-                unsigned int lineRow = -1, lineColumn = -1;
-                while (std::getline(file, line)) {
-                    lineRow++;
-                    lineColumn = line.find(stringToFind);
-                    if (lineColumn != std::string::npos) {
-                        if (!foundLine) {
-                            foundLine = true;
-                            filesWithPattern++;
+
+
+                std::ifstream file;
+                file.open(pathToFile);
+                if(file.good()) {
+                    logData[std::this_thread::get_id()].push_back(pathToFile);
+                    bool foundLine = false;
+                    std::string line;
+                    unsigned int lineRow = -1, lineColumn = -1;
+                    while (std::getline(file, line)) {
+                        lineRow++;
+                        lineColumn = line.find(stringToFind);
+                        if (lineColumn != std::string::npos) {
+                            if (!foundLine) {
+                                foundLine = true;
+                                filesWithPattern++;
+                            }
+                            patternsNumber++;
+                            resultData[pathToFile].emplace_back(std::make_pair(lineColumn, line));
                         }
-                        patternsNumber++;
-                        resultData[pathToFile].emplace_back(std::make_pair(lineColumn, line));
                     }
+                    //}
+                    std::cout << "this thread " << std::this_thread::get_id() << " closed file" << std::endl;
+                    file.close();
                 }
-            //}
-            std::cout << "this thread " << std::this_thread::get_id() << " closed file" << std::endl;
-            file.close();
+
             }
-            mutex.unlock();
+            std::this_thread::sleep_for(std::chrono::seconds(3));
         }
 
     }
@@ -140,9 +157,8 @@ int main(int args, char *argv[]){
         }
     }
 
-    threadPool pool(NUMBER_OF_THREADS, STRING_TO_FIND);
+    threadPool pool(NUMBER_OF_THREADS, STRING_TO_FIND, START_DIRECTORY);
 
-    std::string resultFilePath, logFilePath;
     for(const fs::directory_entry& entry : fs::recursive_directory_iterator(START_DIRECTORY)){
         if(entry.is_regular_file()){
             pool.addPathToQueue(entry.path());
