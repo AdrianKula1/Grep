@@ -39,6 +39,8 @@ public:
 
     void searchFile(fs::path &pathToFile);
 
+    void saveResultToFile(fs::path &pathToFile, unsigned int lineColumn, std::string& line);
+
     unsigned int getSearchedFiles() const;
 
     unsigned int getDilesWithPattern() const;

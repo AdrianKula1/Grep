@@ -23,11 +23,20 @@ void ThreadPool::beginWork(){
 
 }
 
-void ThreadPool::searchFile(fs::path &pathToFile){
-    std::ifstream file;
-    file.open(pathToFile);
+void ThreadPool::saveResultToFile(fs::path &pathToFile, unsigned int lineColumn, std::string& line){
+    std::ofstream resultFile;
+    resultFile.open(pathToFile);
+    if(!resultFile.good() || !resultFile.is_open())
+        return;
 
-    if (!file.good())
+    resultFile << pathToFile.string() << ':' << lineColumn << ": " << line << std::endl;
+}
+
+void ThreadPool::searchFile(fs::path &pathToFile){
+    std::ifstream fileToSearch;
+    fileToSearch.open(pathToFile);
+
+    if (!fileToSearch.good() || !fileToSearch.is_open())
         return;
 
     logData[std::this_thread::get_id()].push_back(pathToFile.filename());
@@ -36,7 +45,7 @@ void ThreadPool::searchFile(fs::path &pathToFile){
     std::string line;
     unsigned int lineRow = 0, lineColumn = 0;
 
-    while (std::getline(file, line)) {
+    while (std::getline(fileToSearch, line)) {
         lineColumn = line.find(stringToFind);
 
         if (lineColumn != std::string::npos) {
@@ -46,11 +55,11 @@ void ThreadPool::searchFile(fs::path &pathToFile){
             }
 
             patternsNumber++;
-            resultData[pathToFile].emplace_back(std::make_pair(lineColumn, line));
+            saveResultToFile(pathToFile, lineColumn, line);
         }
         lineRow++;
     }
-    file.close();
+    fileToSearch.close();
 }
 
 void ThreadPool::fileWorker(int id){
