@@ -1,20 +1,8 @@
 #include <iostream>
-#include <filesystem>
-#include <fstream>
-#include <thread>
-#include <mutex>
-#include <string>
-#include <queue>
-#include <map>
 
 #include "Grep.h"
 
 namespace fs=std::filesystem;
-
-
-
-
-
 
 int main(int argc, char *argv[]){
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
