@@ -6,9 +6,17 @@ ThreadPool::ThreadPool(long noThreads, std::string &stringToFind, std::string &r
     this->stringToFind=stringToFind;
     this->resultFileName=resultFileName;
 
+    resetResultFile();
 }
 
+void ThreadPool::resetResultFile() {
+    std::ifstream fileToSearch;
+    fileToSearch.open(this->resultFileName);
 
+    if (!fileToSearch.good() || !fileToSearch.is_open())
+        return;
+    fileToSearch.close();
+}
 
 void ThreadPool::beginWork(){
     this->searchedFiles+=this->paths.size();
