@@ -43,16 +43,16 @@ void Grep::setDefaultArguments() {
 
 void Grep::setUserArguments() {
     for(int i=2; i < argc; i+=2){
-        if((std::string)argv[i]=="-d" || (std::string)argv[i]=="--dir" ){
-            this->START_DIRECTORY = (std::string) argv[i+1];
+        if(argv[i]=="-d" || argv[i]=="--dir" ){
+            this->START_DIRECTORY =  argv[i+1];
         }
-        if((std::string)argv[i]== "-l" || (std::string)argv[i]=="--log_file" ){
-            this->LOG_FILE_NAME = (std::string) argv[i+1]+".log";
+        if(argv[i]== "-l" || argv[i]=="--log_file" ){
+            this->LOG_FILE_NAME = argv[i+1]+".log";
         }
-        if((std::string)(argv[i])=="-r" || (std::string)argv[i]=="--result_file" ){
-            this->RESULT_FILE_NAME = (std::string) argv[i+1]+".txt";
+        if(argv[i]=="-r" || argv[i]=="--result_file" ){
+            this->RESULT_FILE_NAME = argv[i+1]+".txt";
         }
-        if((std::string)(argv[i])=="-t" || (std::string)argv[i]=="--threads" ){
+        if(argv[i]=="-t" || argv[i]=="--threads" ){
             char* p;
             long noThreads = strtol(&argv[i+1][0], &p, 10);
             this->NUMBER_OF_THREADS = noThreads;
