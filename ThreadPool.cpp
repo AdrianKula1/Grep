@@ -10,7 +10,7 @@ ThreadPool::ThreadPool(long noThreads, std::string &stringToFind, std::string &r
 }
 
 void ThreadPool::resetResultFile() {
-    std::ifstream fileToSearch;
+    std::ofstream fileToSearch;
     fileToSearch.open(this->resultFileName);
 
     if (!fileToSearch.good() || !fileToSearch.is_open())
@@ -34,7 +34,7 @@ void ThreadPool::startWorkWithFile(){
     while(!paths.empty()){
         fs::path pathToFile;
         {
-            std::unique_lock lock(queueMutex);
+            std::lock_guard lock(queueMutex);
             pathToFile = paths.front();
             paths.pop();
         }
