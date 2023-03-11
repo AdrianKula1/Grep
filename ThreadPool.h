@@ -23,7 +23,6 @@ private:
     std::thread directorySearcher;
     std::queue<fs::path> paths;
 
-    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> resultData;
     std::map<std::thread::id, std::vector<fs::path>> logData;
 
     std::mutex queueMutex;
@@ -37,9 +36,8 @@ public:
     void searchFile(fs::path &pathToFile);
     void saveLineToResultFile(fs::path &pathToFile, unsigned int lineColumn, std::string& line);
     unsigned int getSearchedFiles() const;
-    unsigned int getDilesWithPattern() const;
+    unsigned int getFilesWithPattern() const;
     unsigned int getPatternsNumber() const;
-    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> getResultData() const;
     std::map<std::thread::id, std::vector<fs::path>> getLogData() const;
 
 };

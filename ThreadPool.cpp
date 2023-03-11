@@ -82,7 +82,7 @@ unsigned int ThreadPool::getSearchedFiles() const{
     return this->searchedFiles;
 }
 
-unsigned int ThreadPool::getDilesWithPattern() const{
+unsigned int ThreadPool::getFilesWithPattern() const{
     return this->filesWithPattern;
 }
 
