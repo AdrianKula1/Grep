@@ -26,12 +26,13 @@ void ThreadPool::beginWork(){
 
 void ThreadPool::saveLineToResultFile(fs::path &pathToFile, unsigned int lineColumn, std::string& line){
     std::ofstream resultFile;
-    resultFile.open(this->resultFileName);
+    resultFile.open(this->resultFileName, std::ios_base::app);
 
     if(!resultFile.good() || !resultFile.is_open())
         return;
 
     resultFile << pathToFile.string() << ':' << lineColumn << ": " << line << std::endl;
+    resultFile.close();
 }
 
 void ThreadPool::searchFile(fs::path &pathToFile){
@@ -76,7 +77,6 @@ void ThreadPool::fileWorker(){
         }
 
         queueMutex.unlock();
-
     }
 }
 

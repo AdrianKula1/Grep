@@ -14,7 +14,7 @@ Grep::Grep(int args, char *argv[]) {
     }
     validateArguments();
 
-    if(argc == this->minNumberOfArgsToRunTheProgram)
+    if(argc >= this->minNumberOfArgsToRunTheProgram)
         setDefaultArguments();
 
     setUserArguments();
@@ -86,7 +86,7 @@ void Grep::createLogFile() {
 
     std::ofstream logFile(LOG_FILE_NAME);
 
-    if(!logFile.good() || logFile.is_open()){
+    if(!logFile.good() || !logFile.is_open()){
         return;
     }
 
