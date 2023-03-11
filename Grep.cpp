@@ -6,29 +6,25 @@
 #include "Grep.h"
 namespace fs=std::filesystem;
 
-Grep::Grep(int args, char *argv[]) {
-    this->argc=args;
-    this->argv = new std::string[args+1];
-    for(int i=0; i<args; i++) {
+Grep::Grep(int argc, char *argv[]) {
+    this->argc=argc;
+    this->argv = new std::string[argc+1];
+    for(int i=0; i<argc; i++) {
         this->argv[i] = (std::string) argv[i];
     }
-    validateArguments();
-
-    if(argc >= this->minNumberOfArgsToRunTheProgram)
-        setDefaultArguments();
-
-    setUserArguments();
-
-    this->threadPool=new ThreadPool(NUMBER_OF_THREADS, STRING_TO_FIND, RESULT_FILE_NAME);
 }
 
 void Grep::main() {
+    validateArguments();
+    setDefaultArguments();
+    setUserArguments();
+
+    this->threadPool = new ThreadPool(numberOfThreads, stringToFind, resultFileName);
     searchDirectory();
     this->threadPool->beginWork();
+
     createLogFile();
 }
-
-
 
 void Grep::validateArguments() {
     if(argc < this->minNumberOfArgsToRunTheProgram){
@@ -38,36 +34,35 @@ void Grep::validateArguments() {
 }
 
 void Grep::setDefaultArguments() {
-    this->STRING_TO_FIND = (std::string)argv[1];
-    this->START_DIRECTORY = fs::current_path().string();
-    this->LOG_FILE_NAME = std::filesystem::path(argv[0]).filename().string()+".log";
-    this->RESULT_FILE_NAME = std::filesystem::path(argv[0]).filename().string()+".txt";
-    this->NUMBER_OF_THREADS = 4;
+    this->stringToFind = (std::string)argv[1];
+    this->startDirectory = fs::current_path().string();
+    this->logFileName = std::filesystem::path(argv[0]).filename().string() + ".log";
+    this->resultFileName = std::filesystem::path(argv[0]).filename().string() + ".txt";
+    this->numberOfThreads = 4;
 
 }
 
 void Grep::setUserArguments() {
     for(int i=2; i < argc; i+=2){
         if(argv[i]=="-d" || argv[i]=="--dir" ){
-            this->START_DIRECTORY =  argv[i+1];
+            this->startDirectory =  argv[i + 1];
         }
         if(argv[i]== "-l" || argv[i]=="--log_file" ){
-            this->LOG_FILE_NAME = argv[i+1]+".log";
+            this->logFileName = argv[i + 1] + ".log";
         }
         if(argv[i]=="-r" || argv[i]=="--result_file" ){
-            this->RESULT_FILE_NAME = argv[i+1]+".txt";
+            this->resultFileName = argv[i + 1] + ".txt";
         }
         if(argv[i]=="-t" || argv[i]=="--threads" ){
             char* p;
             long noThreads = strtol(&argv[i+1][0], &p, 10);
-            this->NUMBER_OF_THREADS = noThreads;
+            this->numberOfThreads = noThreads;
         }
     }
-
 }
 
 void Grep::searchDirectory() {
-    for(const fs::directory_entry& entry : fs::recursive_directory_iterator(START_DIRECTORY)){
+    for(const fs::directory_entry& entry : fs::recursive_directory_iterator(startDirectory)){
         if(entry.is_regular_file()){
             threadPool->addPathToQueue(entry.path());
         }
@@ -75,16 +70,16 @@ void Grep::searchDirectory() {
 }
 
 void Grep::createLogFile() {
-    std::map<std::thread::id, std::vector<fs::path>> logData = threadPool->getLogData();
+    std::map<std::thread::id, std::vector<fs::path>> threadIdToPathsMap = threadPool->getThreadIdToPathsMap();
 
     std::vector<std::pair<std::thread::id, std::vector<fs::path>>> logDataVector;
-    for(auto &data : logData){
+    for(auto &data : threadIdToPathsMap){
         logDataVector.emplace_back(data);
     }
 
     std::sort(logDataVector.begin(), logDataVector.end(), compareLogData);
 
-    std::ofstream logFile(LOG_FILE_NAME);
+    std::ofstream logFile(logFileName);
 
     if(!logFile.good() || !logFile.is_open()){
         return;
@@ -114,15 +109,20 @@ unsigned int Grep::getPatternsNumber() const {
 }
 
 std::string Grep::getResultFileName() const {
-    return RESULT_FILE_NAME;
+    return resultFileName;
 }
 
 std::string Grep::getLogFileName() const {
-    return LOG_FILE_NAME;
+    return logFileName;
 }
 
 unsigned int Grep::getNumberOfThreads() const {
-    return NUMBER_OF_THREADS;
+    return numberOfThreads;
+}
+
+bool Grep::compareLogData(std::pair<std::thread::id, std::vector<fs::path>> &a,
+                          std::pair<std::thread::id, std::vector<fs::path>> &b) {
+    return a.second.size() > b.second.size();
 }
 
 
