@@ -29,6 +29,7 @@ private:
 public:
 
     ThreadPool(long noThreads, std::string& stringToFind, std::string& resultFileName);
+    void resetResultFile();
     void addPathToQueue(const fs::path& pathToFile);
     void beginWork();
     void startWorkWithFile();
