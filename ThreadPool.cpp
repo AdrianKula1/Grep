@@ -5,79 +5,75 @@ ThreadPool::ThreadPool(long noThreads, std::string &stringToFind, std::string &r
     this->threads.reserve(noThreads);
     this->stringToFind=stringToFind;
     this->resultFileName=resultFileName;
-
-}
-
-void ThreadPool::addPathToQueue(const fs::path& pathToFile){
-    this->paths.push(pathToFile);
 }
 
 void ThreadPool::beginWork(){
     this->searchedFiles+=this->paths.size();
 
     for(int i=0; i<noThreads; i++)
-        this->threads.emplace_back(&ThreadPool::fileWorker, this);
-
+        this->threads.emplace_back(&ThreadPool::startWorkWithFile, this);
 
     for(int i=0; i<noThreads; i++)
         this->threads[i].join();
-
 }
 
-void ThreadPool::saveLineToResultFile(fs::path &pathToFile, unsigned int lineColumn, std::string& line){
-    std::ofstream resultFile;
-    resultFile.open(this->resultFileName, std::ios_base::app);
+void ThreadPool::startWorkWithFile(){
+    threadIdToPathsMap[std::this_thread::get_id()];
 
-    if(!resultFile.good() || !resultFile.is_open())
-        return;
+    while(!paths.empty()){
+        queueMutex.lock();
 
-    resultFile << pathToFile.string() << ':' << lineColumn << ": " << line << std::endl;
-    resultFile.close();
+        if(!paths.empty()){
+            fs::path pathToFile = paths.front();
+            paths.pop();
+            searchWithinFile(pathToFile);
+        }
+        queueMutex.unlock();
+    }
 }
 
-void ThreadPool::searchFile(fs::path &pathToFile){
+void ThreadPool::searchWithinFile(fs::path &pathToFile){
     std::ifstream fileToSearch;
     fileToSearch.open(pathToFile);
 
     if (!fileToSearch.good() || !fileToSearch.is_open())
         return;
 
-    logData[std::this_thread::get_id()].push_back(pathToFile.filename());
+    threadIdToPathsMap[std::this_thread::get_id()].push_back(pathToFile.filename());
 
-    bool fileHasPattern = false;
+    bool isSearchedPatternFound = false;
     std::string line;
-    unsigned int lineRow = 0, lineColumn = 0;
+    unsigned int searchedWordIndex = 0;
 
     while (std::getline(fileToSearch, line)) {
-        lineColumn = line.find(stringToFind);
+        searchedWordIndex = line.find(stringToFind);
 
-        if (lineColumn != std::string::npos) {
-            if (!fileHasPattern) {
-                fileHasPattern = true;
-                filesWithPattern++;
+        if (searchedWordIndex != std::string::npos) {
+            if (!isSearchedPatternFound) {
+                isSearchedPatternFound = true;
+                filesContainingPattern++;
             }
             patternsNumber++;
-            saveLineToResultFile(pathToFile, lineColumn, line);
+            saveLineToResultFile(pathToFile, searchedWordIndex, line);
         }
-        lineRow++;
     }
     fileToSearch.close();
 }
 
-void ThreadPool::fileWorker(){
-    logData[std::this_thread::get_id()];
+void ThreadPool::saveLineToResultFile(fs::path &pathToFile, unsigned int searchedWordIndex, std::string& line){
+    std::ofstream resultFile;
+    resultFile.open(this->resultFileName, std::ios_base::app);
 
-    while(!paths.empty()){
-        queueMutex.lock();
-        if(!paths.empty()){
-            fs::path pathToFile = paths.front();
-            paths.pop();
+    if(resultFile.good() && resultFile.is_open())
+        return;
 
-            searchFile(pathToFile);
-        }
+    resultFile << pathToFile.string() << ':' << searchedWordIndex << ": " << line << std::endl;
 
-        queueMutex.unlock();
-    }
+    resultFile.close();
+}
+
+void ThreadPool::addPathToQueue(const fs::path& pathToFile){
+    this->paths.push(pathToFile);
 }
 
 unsigned int ThreadPool::getSearchedFiles() const{
@@ -85,13 +81,13 @@ unsigned int ThreadPool::getSearchedFiles() const{
 }
 
 unsigned int ThreadPool::getFilesWithPattern() const{
-    return this->filesWithPattern;
+    return this->filesContainingPattern;
 }
 
 unsigned int ThreadPool::getPatternsNumber() const{
     return this->patternsNumber;
 }
 
-std::map<std::thread::id, std::vector<fs::path>> ThreadPool::getLogData() const{
-    return logData;
+std::map<std::thread::id, std::vector<fs::path>> ThreadPool::getThreadIdToPathsMap() const{
+    return threadIdToPathsMap;
 }

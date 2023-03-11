@@ -8,16 +8,14 @@ private:
     int argc;
     std::string *argv;
 
-    std::string STRING_TO_FIND, START_DIRECTORY, RESULT_FILE_NAME, LOG_FILE_NAME;
-    long NUMBER_OF_THREADS;
+    std::string stringToFind, startDirectory, resultFileName, logFileName;
+    long numberOfThreads;
 
     ThreadPool *threadPool;
 
     static bool compareLogData(std::pair<std::thread::id, std::vector<fs::path>>& a,
-                               std::pair<std::thread::id, std::vector<fs::path>>& b)
-    {
-        return a.second.size() > b.second.size();
-    }
+                               std::pair<std::thread::id, std::vector<fs::path>>& b);
+
 
 public:
     Grep(int args, char *argv[]);
