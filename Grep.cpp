@@ -101,6 +101,32 @@ void Grep::createLogFile() {
     logFile.close();
 }
 
+unsigned int Grep::getSearchedFiles() const {
+    return threadPool->getSearchedFiles();;
+}
+
+unsigned int Grep::getFilesWithPattern() const {
+    return threadPool->getFilesWithPattern();
+}
+
+unsigned int Grep::getPatternsNumber() const {
+    return threadPool->getPatternsNumber();
+}
+
+std::string Grep::getResultFileName() const {
+    return RESULT_FILE_NAME;
+}
+
+std::string Grep::getLogFileName() const {
+    return LOG_FILE_NAME;
+}
+
+unsigned int Grep::getNumberOfThreads() const {
+    return NUMBER_OF_THREADS;
+}
+
+
+
 
 
 

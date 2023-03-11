@@ -8,7 +8,7 @@ private:
     int argc;
     std::string *argv;
 
-    std::string STRING_TO_FIND, START_DIRECTORY, LOG_FILE_NAME, RESULT_FILE_NAME;
+    std::string STRING_TO_FIND, START_DIRECTORY, RESULT_FILE_NAME, LOG_FILE_NAME;
     long NUMBER_OF_THREADS;
 
     ThreadPool *threadPool;
@@ -27,6 +27,14 @@ public:
     void setUserArguments();
     void searchDirectory();
     void createLogFile();
+
+    unsigned int getSearchedFiles() const;
+    unsigned int getFilesWithPattern() const;
+    unsigned int getPatternsNumber() const;
+
+    std::string getResultFileName() const;
+    std::string getLogFileName() const;
+    unsigned int getNumberOfThreads() const;
 };
 
 
