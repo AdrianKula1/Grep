@@ -53,7 +53,6 @@ void ThreadPool::searchFile(fs::path &pathToFile){
                 fileHasPattern = true;
                 filesWithPattern++;
             }
-
             patternsNumber++;
             saveResultToFile(pathToFile, lineColumn, line);
         }
@@ -62,7 +61,7 @@ void ThreadPool::searchFile(fs::path &pathToFile){
     fileToSearch.close();
 }
 
-void ThreadPool::fileWorker(int id){
+void ThreadPool::fileWorker(){
     logData[std::this_thread::get_id()];
 
     while(!paths.empty()){

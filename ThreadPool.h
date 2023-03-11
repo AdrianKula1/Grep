@@ -35,7 +35,7 @@ public:
 
     void beginWork();
 
-    void fileWorker(int id);
+    void fileWorker();
 
     void searchFile(fs::path &pathToFile);
 
