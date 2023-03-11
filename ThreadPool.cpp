@@ -1,9 +1,10 @@
 #include "ThreadPool.h"
 #include<fstream>
-ThreadPool::ThreadPool(long noThreads, std::string &stringToFind) {
+ThreadPool::ThreadPool(long noThreads, std::string &stringToFind, std::string &resultFileName) {
     this->noThreads=noThreads;
     this->threads.reserve(noThreads);
     this->stringToFind=stringToFind;
+    this->resultFileName=resultFileName;
 
 }
 
@@ -23,9 +24,10 @@ void ThreadPool::beginWork(){
 
 }
 
-void ThreadPool::saveResultToFile(fs::path &pathToFile, unsigned int lineColumn, std::string& line){
+void ThreadPool::saveLineToResultFile(fs::path &pathToFile, unsigned int lineColumn, std::string& line){
     std::ofstream resultFile;
-    resultFile.open(pathToFile);
+    resultFile.open(this->resultFileName);
+
     if(!resultFile.good() || !resultFile.is_open())
         return;
 
@@ -54,7 +56,7 @@ void ThreadPool::searchFile(fs::path &pathToFile){
                 filesWithPattern++;
             }
             patternsNumber++;
-            saveResultToFile(pathToFile, lineColumn, line);
+            saveLineToResultFile(pathToFile, lineColumn, line);
         }
         lineRow++;
     }
