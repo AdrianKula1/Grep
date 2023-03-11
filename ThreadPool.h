@@ -25,8 +25,7 @@ private:
     std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> resultData;
     std::map<std::thread::id, std::vector<fs::path>> logData;
 
-    std::mutex *searchMutexes;
-    std::mutex m;
+    std::mutex queueMutex;
 
 public:
 
@@ -36,7 +35,9 @@ public:
 
     void beginWork();
 
-    void fileSearcher(int id);
+    void fileWorker(int id);
+
+    void searchFile(fs::path &pathToFile);
 
     unsigned int getSearchedFiles() const;
 
