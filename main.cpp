@@ -7,6 +7,8 @@
 #include <queue>
 #include <map>
 
+#include "Grep.h"
+
 namespace fs=std::filesystem;
 
 bool compareLogData(std::pair<std::thread::id, std::vector<fs::path>>& a,
@@ -50,6 +52,7 @@ public:
 
     void beginWork(){
         this->searchedFiles+=this->paths.size();
+
         for(int i=0; i<noThreads; i++)
             this->threads.emplace_back(&threadPool::fileSearcher, this, i);
 
@@ -61,11 +64,9 @@ public:
 
     void fileSearcher(int id){
         logData[std::this_thread::get_id()];
+
         while(!paths.empty()){
             std::lock_guard<std::mutex> lock(searchMutexes[id]);
-
-            if(paths.empty())
-                return;
 
             fs::path pathToFile = paths.front();
             paths.pop();
@@ -124,50 +125,26 @@ public:
 
 
 
-int main(int args, char *argv[]){
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-    if(args<2){
-        std::cout << "The program has one obligatory parameter which is <pattern(string)>" << std::endl;
-        return 0;
-    }
+int main(int argc, char *argv[]){
+    //std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-    //default parameters
-    std::string STRING_TO_FIND = (std::string)argv[1];
-    std::string START_DIRECTORY = fs::current_path().string();
-    std::string LOG_FILE_NAME = std::filesystem::path(argv[0]).filename().string()+".log";
-    std::string RESULT_FILE_NAME = std::filesystem::path(argv[0]).filename().string()+".txt";
-    long NUMBER_OF_THREADS = 4;
 
-    if(args>2){
-        for(int i=2; i<args; i+=2){
-            if((std::string)argv[i]=="-d" || (std::string)argv[i]=="--dir" ){
-                START_DIRECTORY = (std::string) argv[i+1];
-            }
-            if((std::string)argv[i]== "-l" || (std::string)argv[i]=="--log_file" ){
-                LOG_FILE_NAME = (std::string) argv[i+1]+".log";
-            }
-            if((std::string)(argv[i])=="-r" || (std::string)argv[i]=="--result_file" ){
-                RESULT_FILE_NAME = (std::string) argv[i+1]+".txt";
-            }
-            if((std::string)(argv[i])=="-t" || (std::string)argv[i]=="--threads" ){
-                char* p;
-                long arg = strtol(argv[i+1], &p, 10);
-                NUMBER_OF_THREADS = arg;
-            }
-        }
-    }
 
-    threadPool pool(NUMBER_OF_THREADS, STRING_TO_FIND);
+    Grep g(argc, argv);
+    g.main();
 
+
+    //threadPool pool(NUMBER_OF_THREADS, STRING_TO_FIND);
+/*
     for(const fs::directory_entry& entry : fs::recursive_directory_iterator(START_DIRECTORY)){
         if(entry.is_regular_file()){
             pool.addPathToQueue(entry.path());
         }
     }
 
-    pool.beginWork();
-
+    pool.beginWork();*/
+/*
     unsigned int searchedFiles = pool.getSearchedFiles();
     unsigned int filesWithPattern = pool.getDilesWithPattern();
     unsigned int patternsNumber = pool.getPatternsNumber();
@@ -185,13 +162,6 @@ int main(int args, char *argv[]){
     }
     resultFile.close();
 
-
-    std::vector<std::pair<std::thread::id, std::vector<fs::path>>> logDataVector;
-    for(auto &data : logData){
-        logDataVector.emplace_back(data);
-    }
-
-    std::sort(logDataVector.begin(), logDataVector.end(), compareLogData);
 
     std::ofstream logFile(LOG_FILE_NAME);
     if(logFile.is_open()){
@@ -214,7 +184,7 @@ int main(int args, char *argv[]){
     std::cout << "Result file: " << RESULT_FILE_NAME << std::endl;
     std::cout << "Log file: " << LOG_FILE_NAME << std::endl;
     std::cout << "Used threads: " << NUMBER_OF_THREADS << std::endl;
-    std::cout << "Elapsed time: " << elapsedTime  << "[ms]"<< std::endl;
+    std::cout << "Elapsed time: " << elapsedTime  << "[ms]"<< std::endl;*/
 
     return 0;
 }
