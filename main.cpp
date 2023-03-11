@@ -11,11 +11,7 @@
 
 namespace fs=std::filesystem;
 
-bool compareLogData(std::pair<std::thread::id, std::vector<fs::path>>& a,
-        std::pair<std::thread::id, std::vector<fs::path>>& b)
-{
-    return a.second.size() > b.second.size();
-}
+
 
 
 

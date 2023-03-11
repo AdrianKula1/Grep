@@ -17,6 +17,7 @@ private:
 
     std::string stringToFind;
     std::string startingDirectory;
+    std::string resultFileName;
 
     std::vector<std::thread> threads;
     std::thread directorySearcher;
@@ -29,26 +30,16 @@ private:
 
 public:
 
-    ThreadPool(long noThreads, std::string& stringToFind);
-
+    ThreadPool(long noThreads, std::string& stringToFind, std::string& resultFileName);
     void addPathToQueue(const fs::path& pathToFile);
-
     void beginWork();
-
     void fileWorker();
-
     void searchFile(fs::path &pathToFile);
-
-    void saveResultToFile(fs::path &pathToFile, unsigned int lineColumn, std::string& line);
-
+    void saveLineToResultFile(fs::path &pathToFile, unsigned int lineColumn, std::string& line);
     unsigned int getSearchedFiles() const;
-
     unsigned int getDilesWithPattern() const;
-
     unsigned int getPatternsNumber() const;
-
     std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> getResultData() const;
-
     std::map<std::thread::id, std::vector<fs::path>> getLogData() const;
 
 };

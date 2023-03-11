@@ -1,21 +1,17 @@
-#include "Grep.h"
 #include <string>
 #include <filesystem>
 #include <iostream>
 #include <cstdlib>
-
+#include <fstream>
+#include "Grep.h"
 namespace fs=std::filesystem;
 
 Grep::Grep(int args, char *argv[]) {
     this->argc=args;
     this->argv = new std::string[args+1];
-    for(int i=0; i<args; i++){
-        this->argv[i]=(std::string)argv[i];
+    for(int i=0; i<args; i++) {
+        this->argv[i] = (std::string) argv[i];
     }
-
-}
-
-void Grep::main() {
     validateArguments();
 
     if(argc == this->minNumberOfArgsToRunTheProgram)
@@ -23,7 +19,16 @@ void Grep::main() {
 
     setUserArguments();
 
+    this->threadPool=new ThreadPool(NUMBER_OF_THREADS, STRING_TO_FIND, RESULT_FILE_NAME);
 }
+
+void Grep::main() {
+    searchDirectory();
+    this->threadPool->beginWork();
+    createLogFile();
+}
+
+
 
 void Grep::validateArguments() {
     if(argc < this->minNumberOfArgsToRunTheProgram){
@@ -60,5 +65,42 @@ void Grep::setUserArguments() {
     }
 
 }
+
+void Grep::searchDirectory() {
+    for(const fs::directory_entry& entry : fs::recursive_directory_iterator(START_DIRECTORY)){
+        if(entry.is_regular_file()){
+            threadPool->addPathToQueue(entry.path());
+        }
+    }
+}
+
+void Grep::createLogFile() {
+    std::map<std::thread::id, std::vector<fs::path>> logData = threadPool->getLogData();
+
+    std::vector<std::pair<std::thread::id, std::vector<fs::path>>> logDataVector;
+    for(auto &data : logData){
+        logDataVector.emplace_back(data);
+    }
+
+    std::sort(logDataVector.begin(), logDataVector.end(), compareLogData);
+
+    std::ofstream logFile(LOG_FILE_NAME);
+
+    if(!logFile.good() || logFile.is_open()){
+        return;
+    }
+
+    for(auto &threadData: logDataVector){
+        logFile << threadData.first << ": ";
+        for (auto &filename: threadData.second){
+            logFile << filename << ',' ;
+        }
+        logFile << std::endl;
+    }
+
+    logFile.close();
+}
+
+
 
 
