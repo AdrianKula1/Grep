@@ -88,9 +88,6 @@ unsigned int ThreadPool::getPatternsNumber() const{
     return this->patternsNumber;
 }
 
-std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> ThreadPool::getResultData() const{
-    return resultData;
-}
 std::map<std::thread::id, std::vector<fs::path>> ThreadPool::getLogData() const{
     return logData;
 }
