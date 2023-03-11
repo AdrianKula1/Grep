@@ -32,14 +32,13 @@ void ThreadPool::startWorkWithFile(){
     threadIdToPathsMap[std::this_thread::get_id()];
 
     while(!paths.empty()){
-        queueMutex.lock();
-
-        if(!paths.empty()){
-            fs::path pathToFile = paths.front();
+        fs::path pathToFile;
+        {
+            std::unique_lock lock(queueMutex);
+            pathToFile = paths.front();
             paths.pop();
-            searchWithinFile(pathToFile);
         }
-        queueMutex.unlock();
+        searchWithinFile(pathToFile);
     }
 }
 
