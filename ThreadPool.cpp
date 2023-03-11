@@ -5,7 +5,10 @@ ThreadPool::ThreadPool(long noThreads, std::string &stringToFind, std::string &r
     this->threads.reserve(noThreads);
     this->stringToFind=stringToFind;
     this->resultFileName=resultFileName;
+
 }
+
+
 
 void ThreadPool::beginWork(){
     this->searchedFiles+=this->paths.size();
@@ -64,7 +67,7 @@ void ThreadPool::saveLineToResultFile(fs::path &pathToFile, unsigned int searche
     std::ofstream resultFile;
     resultFile.open(this->resultFileName, std::ios_base::app);
 
-    if(resultFile.good() && resultFile.is_open())
+    if(!resultFile.good() || !resultFile.is_open())
         return;
 
     resultFile << pathToFile.string() << ':' << searchedWordIndex << ": " << line << std::endl;
@@ -91,3 +94,5 @@ unsigned int ThreadPool::getPatternsNumber() const{
 std::map<std::thread::id, std::vector<fs::path>> ThreadPool::getThreadIdToPathsMap() const{
     return threadIdToPathsMap;
 }
+
+
