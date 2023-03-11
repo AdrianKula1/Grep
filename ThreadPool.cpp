@@ -16,7 +16,7 @@ void ThreadPool::beginWork(){
     this->searchedFiles+=this->paths.size();
 
     for(int i=0; i<noThreads; i++)
-        this->threads.emplace_back(&ThreadPool::fileWorker, this, i);
+        this->threads.emplace_back(&ThreadPool::fileWorker, this);
 
 
     for(int i=0; i<noThreads; i++)
@@ -67,14 +67,16 @@ void ThreadPool::fileWorker(){
     logData[std::this_thread::get_id()];
 
     while(!paths.empty()){
-        {
-            std::lock_guard<std::mutex> lock(queueMutex);
-
+        queueMutex.lock();
+        if(!paths.empty()){
             fs::path pathToFile = paths.front();
             paths.pop();
 
             searchFile(pathToFile);
         }
+
+        queueMutex.unlock();
+
     }
 }
 
