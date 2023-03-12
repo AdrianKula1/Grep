@@ -73,9 +73,9 @@ void Grep::createResultFile() {
     std::sort(resultDataVector.begin(), resultDataVector.end(),
               compareData<std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>>);
 
-    std::ofstream resultFile(resultFileName);
-
-    if(!resultFile.good() || !resultFile.is_open()){
+    std::ofstream resultFile;
+    resultFile.open(resultFileName);
+    if(!resultFile){
         return;
     }
 
@@ -99,9 +99,9 @@ void Grep::createLogFile() {
     std::sort(logDataVector.begin(), logDataVector.end(),
               compareData<std::pair<std::thread::id, std::vector<fs::path>>>);
 
-    std::ofstream logFile(logFileName);
-
-    if(!logFile.good() || !logFile.is_open()){
+    std::ofstream logFile;
+    logFile.open(logFileName);
+    if(!logFile){
         return;
     }
 

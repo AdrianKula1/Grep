@@ -15,8 +15,9 @@ void ThreadPool::resetResultFile() {
     std::ofstream fileToSearch;
     fileToSearch.open(this->resultFileName);
 
-    if (!fileToSearch.good() || !fileToSearch.is_open())
+    if (!fileToSearch)
         return;
+
     fileToSearch.close();
 }
 
@@ -65,7 +66,7 @@ void ThreadPool::searchWithinFile(fs::path &pathToFile){
     std::ifstream fileToSearch;
     fileToSearch.open(pathToFile);
 
-    if (!fileToSearch.good() || !fileToSearch.is_open())
+    if (!fileToSearch)
         return;
 
     threadIdToPathsMap[std::this_thread::get_id()].push_back(pathToFile.filename());
