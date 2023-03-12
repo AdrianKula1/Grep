@@ -29,8 +29,7 @@ void Grep::main() {
 
 void Grep::validateArguments() const {
     if(argc < this->minNumberOfArgsToRunTheProgram){
-        std::cout << "The program has one obligatory parameter which is <pattern(string)>" << std::endl;
-        throw std::runtime_error("error");
+        throw std::runtime_error("The program has one obligatory parameter which is <pattern(string)>");
     }
 }
 
