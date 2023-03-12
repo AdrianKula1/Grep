@@ -1,7 +1,9 @@
 #ifndef TIETOEVRYTASK_GREP_H
 #define TIETOEVRYTASK_GREP_H
 #include<string>
+
 #include "ThreadPool.h"
+
 class Grep {
 private:
     int minNumberOfArgsToRunTheProgram = 2;
@@ -31,11 +33,9 @@ public:
     unsigned int getSearchedFiles() const;
     unsigned int getFilesWithPattern() const;
     unsigned int getPatternsNumber() const;
-
     std::string getResultFileName() const;
     std::string getLogFileName() const;
     unsigned int getNumberOfThreads() const;
 };
-
 
 #endif //TIETOEVRYTASK_GREP_H

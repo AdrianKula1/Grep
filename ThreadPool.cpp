@@ -1,6 +1,6 @@
 #include "ThreadPool.h"
 #include<fstream>
-#include<iostream>
+
 ThreadPool::ThreadPool(long noThreads, std::string &stringToFind, std::string &resultFileName, std::string& startDirectory) {
     this->noThreads=noThreads;
     this->threads.reserve(noThreads);
@@ -21,8 +21,6 @@ void ThreadPool::resetResultFile() {
 }
 
 void ThreadPool::beginWork(){
-    //this->searchedFiles+=this->paths.size();
-
     this->directorySearcher = std::thread(&ThreadPool::searchDirectory, this);
 
     for(int i=0; i<noThreads; i++)
@@ -32,7 +30,6 @@ void ThreadPool::beginWork(){
 
     for(int i=0; i<noThreads; i++)
         this->threads[i].join();
-
 }
 
 void ThreadPool::searchDirectory() {
@@ -46,7 +43,6 @@ void ThreadPool::searchDirectory() {
         }
     }
     allFilesFound=true;
-
 }
 
 void ThreadPool::startWorkWithFile(){
@@ -95,18 +91,6 @@ void ThreadPool::searchWithinFile(fs::path &pathToFile){
     fileToSearch.close();
 }
 
-/*void ThreadPool::saveLineToResultFile(fs::path &pathToFile, unsigned int searchedWordIndex, std::string& line){
-    std::ofstream resultFile;
-    resultFile.open(this->resultFileName, std::ios_base::app);
-
-    if(!resultFile.good() || !resultFile.is_open())
-        return;
-
-    resultFile << pathToFile.string() << ':' << searchedWordIndex << ": " << line << std::endl;
-
-    resultFile.close();
-}*/
-
 void ThreadPool::addPathToQueue(const fs::path& pathToFile){
     this->paths.push(pathToFile);
 }
@@ -127,12 +111,6 @@ std::map<std::thread::id, std::vector<fs::path>> ThreadPool::getThreadIdToPathsM
     return threadIdToPathsMap;
 }
 
-
-
 std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> ThreadPool::getfilePathToLineMap() const {
     return filePathToLineMap;
 }
-
-
-
-

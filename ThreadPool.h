@@ -1,13 +1,12 @@
 #ifndef TIETOEVRYTASK_THREADPOOL_H
 #define TIETOEVRYTASK_THREADPOOL_H
+#include<condition_variable>
+#include<filesystem>
 #include<string>
 #include<thread>
 #include<mutex>
 #include<queue>
 #include<map>
-#include<filesystem>
-#include<condition_variable>
-#include<tuple>
 
 namespace fs = std::filesystem;
 
@@ -35,8 +34,6 @@ private:
 
     bool allFilesFound=false;
 
-
-
 public:
 
     ThreadPool(long noThreads, std::string& stringToFind, std::string& resultFileName, std::string& startDirectory);
@@ -46,7 +43,7 @@ public:
     void beginWork();
     void startWorkWithFile();
     void searchWithinFile(fs::path &pathToFile);
-//    void saveLineToResultFile(fs::path &pathToFile, unsigned int searchedWordIndex, std::string& line);
+
     unsigned int getSearchedFiles() const;
     unsigned int getFilesWithPattern() const;
     unsigned int getPatternsNumber() const;
@@ -54,6 +51,5 @@ public:
     std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> getfilePathToLineMap() const;
 
 };
-
 
 #endif //TIETOEVRYTASK_THREADPOOL_H

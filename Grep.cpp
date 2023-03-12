@@ -1,9 +1,11 @@
-#include <string>
 #include <filesystem>
+#include <string>
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
+
 #include "Grep.h"
+
 namespace fs=std::filesystem;
 
 Grep::Grep(int argc, char *argv[]) {
@@ -24,8 +26,6 @@ void Grep::main() {
     createResultFile();
     createLogFile();
 }
-
-
 
 void Grep::validateArguments() const {
     if(argc < this->minNumberOfArgsToRunTheProgram){
