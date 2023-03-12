@@ -70,7 +70,8 @@ void Grep::createResultFile() {
         resultDataVector.emplace_back(data);
     }
 
-    std::sort(resultDataVector.begin(), resultDataVector.end(), compareResultData);
+    std::sort(resultDataVector.begin(), resultDataVector.end(),
+              compareData<std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>>);
 
     std::ofstream resultFile(resultFileName);
 
@@ -95,7 +96,8 @@ void Grep::createLogFile() {
         logDataVector.emplace_back(data);
     }
 
-    std::sort(logDataVector.begin(), logDataVector.end(), compareLogData);
+    std::sort(logDataVector.begin(), logDataVector.end(),
+              compareData<std::pair<std::thread::id, std::vector<fs::path>>>);
 
     std::ofstream logFile(logFileName);
 
@@ -138,13 +140,8 @@ unsigned int Grep::getNumberOfThreads() const {
     return numberOfThreads;
 }
 
-bool Grep::compareLogData(std::pair<std::thread::id, std::vector<fs::path>> &a,
-                          std::pair<std::thread::id, std::vector<fs::path>> &b) {
-    return a.second.size() > b.second.size();
-}
-
-bool Grep::compareResultData(std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>> &a,
-                             std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>> &b) {
+template<typename T>
+bool Grep::compareData(T &a, T &b) {
     return a.second.size() > b.second.size();
 }
 

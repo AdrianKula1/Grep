@@ -11,15 +11,12 @@ private:
     std::string *argv;
 
     std::string stringToFind, startDirectory, resultFileName, logFileName;
-    long numberOfThreads{};
+    long numberOfThreads;
 
-    ThreadPool *threadPool{};
+    ThreadPool *threadPool;
 
-    static bool compareLogData(std::pair<std::thread::id, std::vector<fs::path>>& a,
-                               std::pair<std::thread::id, std::vector<fs::path>>& b);
-
-    static bool compareResultData(std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>> & a,
-                                  std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>> & b);
+    template<typename T>
+    static bool compareData(T &a, T&b);
 
 public:
     Grep(int args, char *argv[]);
