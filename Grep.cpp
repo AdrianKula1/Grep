@@ -12,21 +12,19 @@ Grep::Grep(int argc, char *argv[]) {
     for(int i=0; i<argc; i++) {
         this->argv[i] = (std::string) argv[i];
     }
-}
 
-void Grep::main() {
     validateArguments();
     setDefaultArguments();
     setUserArguments();
+    this->threadPool = new ThreadPool(numberOfThreads, stringToFind, resultFileName, startDirectory);
+}
 
-    this->threadPool = new ThreadPool(numberOfThreads, stringToFind, resultFileName);
-    searchDirectory();
+void Grep::main() {
     this->threadPool->beginWork();
-
     createLogFile();
 }
 
-void Grep::validateArguments() {
+void Grep::validateArguments() const {
     if(argc < this->minNumberOfArgsToRunTheProgram){
         std::cout << "The program has one obligatory parameter which is <pattern(string)>" << std::endl;
         throw std::runtime_error("error");
@@ -61,14 +59,6 @@ void Grep::setUserArguments() {
     }
 }
 
-void Grep::searchDirectory() {
-    for(const fs::directory_entry& entry : fs::recursive_directory_iterator(startDirectory)){
-        if(entry.is_regular_file()){
-            threadPool->addPathToQueue(entry.path());
-        }
-    }
-}
-
 void Grep::createLogFile() {
     std::map<std::thread::id, std::vector<fs::path>> threadIdToPathsMap = threadPool->getThreadIdToPathsMap();
 
@@ -97,7 +87,7 @@ void Grep::createLogFile() {
 }
 
 unsigned int Grep::getSearchedFiles() const {
-    return threadPool->getSearchedFiles();;
+    return threadPool->getSearchedFiles();
 }
 
 unsigned int Grep::getFilesWithPattern() const {

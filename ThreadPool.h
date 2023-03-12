@@ -6,6 +6,7 @@
 #include<queue>
 #include<map>
 #include<filesystem>
+#include<condition_variable>
 
 namespace fs = std::filesystem;
 
@@ -17,6 +18,7 @@ private:
     std::string stringToFind;
     std::string startingDirectory;
     std::string resultFileName;
+    std::string startDirectory;
 
     std::vector<std::thread> threads;
     std::thread directorySearcher;
@@ -25,11 +27,17 @@ private:
     std::map<std::thread::id, std::vector<fs::path>> threadIdToPathsMap;
 
     std::mutex queueMutex;
+    std::mutex resultFileMutex;
+
+    std::condition_variable emptyQueueCondition;
+
+    bool allFilesFound=false;
 
 public:
 
-    ThreadPool(long noThreads, std::string& stringToFind, std::string& resultFileName);
+    ThreadPool(long noThreads, std::string& stringToFind, std::string& resultFileName, std::string& startDirectory);
     void resetResultFile();
+    void searchDirectory();
     void addPathToQueue(const fs::path& pathToFile);
     void beginWork();
     void startWorkWithFile();

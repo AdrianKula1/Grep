@@ -9,9 +9,9 @@ private:
     std::string *argv;
 
     std::string stringToFind, startDirectory, resultFileName, logFileName;
-    long numberOfThreads;
+    long numberOfThreads{};
 
-    ThreadPool *threadPool;
+    ThreadPool *threadPool{};
 
     static bool compareLogData(std::pair<std::thread::id, std::vector<fs::path>>& a,
                                std::pair<std::thread::id, std::vector<fs::path>>& b);
@@ -20,10 +20,9 @@ private:
 public:
     Grep(int args, char *argv[]);
     void main();
-    void validateArguments();
+    void validateArguments() const;
     void setDefaultArguments();
     void setUserArguments();
-    void searchDirectory();
     void createLogFile();
 
     unsigned int getSearchedFiles() const;
