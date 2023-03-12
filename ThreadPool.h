@@ -22,6 +22,9 @@ private:
 
     std::mutex mutexQueue;
     std::mutex mutexFilePathToLineMap;
+    std::mutex mutexThreadIdToPathsMap;
+    std::mutex mutexFilesContainingPattern;
+    std::mutex mutexPatternsNumber;
 
     std::queue<fs::path> paths;
 
@@ -30,7 +33,7 @@ private:
     std::map<std::thread::id, std::vector<fs::path>> threadIdToPathsMap;
     std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> filePathToLineMap;
 
-    bool allFilesFound=false;
+    bool finishedSearchingForFiles=false;
 
 public:
 

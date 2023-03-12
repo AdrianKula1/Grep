@@ -1,5 +1,6 @@
 #include "ThreadPool.h"
 #include<fstream>
+#include <iostream>
 
 ThreadPool::ThreadPool(long noThreads, std::string &stringToFind, std::string &resultFileName, std::string& startDirectory) {
     this->noThreads=noThreads;
@@ -36,19 +37,24 @@ void ThreadPool::beginWork(){
 void ThreadPool::searchDirectory() {
     for(const fs::directory_entry& entry : fs::recursive_directory_iterator(startDirectory)){
         if(entry.is_regular_file()){
-                this->searchedFiles++;
+            {
                 std::unique_lock lock(mutexQueue);
+                this->searchedFiles++;
                 addPathToQueue(entry.path());
                 lock.unlock();
                 emptyQueueCondition.notify_one();
+            }
         }
     }
-    allFilesFound=true;
+    finishedSearchingForFiles=true;
 }
 
 void ThreadPool::startWorkWithFile(){
+    mutexThreadIdToPathsMap.lock();
     threadIdToPathsMap[std::this_thread::get_id()];
-    while(!allFilesFound || !paths.empty()){
+    mutexThreadIdToPathsMap.unlock();
+
+    while(!finishedSearchingForFiles || !paths.empty()){
         fs::path pathToFile;
         {
             std::unique_lock lock(mutexQueue);
@@ -63,13 +69,16 @@ void ThreadPool::startWorkWithFile(){
 }
 
 void ThreadPool::searchWithinFile(fs::path &pathToFile){
+
     std::ifstream fileToSearch;
     fileToSearch.open(pathToFile);
 
     if (!fileToSearch)
         return;
 
+    mutexThreadIdToPathsMap.lock();
     threadIdToPathsMap[std::this_thread::get_id()].push_back(pathToFile.filename());
+    mutexThreadIdToPathsMap.unlock();
 
     bool isSearchedPatternFound = false;
     std::string line;
@@ -81,9 +90,15 @@ void ThreadPool::searchWithinFile(fs::path &pathToFile){
         if (searchedWordIndex != std::string::npos) {
             if (!isSearchedPatternFound) {
                 isSearchedPatternFound = true;
+                mutexFilesContainingPattern.lock();
                 filesContainingPattern++;
+                mutexFilesContainingPattern.unlock();
             }
+
+            mutexPatternsNumber.lock();
             patternsNumber++;
+            mutexPatternsNumber.unlock();
+
             mutexFilePathToLineMap.lock();
             this->filePathToLineMap[pathToFile].emplace_back(searchedWordIndex, line);
             mutexFilePathToLineMap.unlock();
