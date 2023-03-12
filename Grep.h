@@ -16,6 +16,8 @@ private:
     static bool compareLogData(std::pair<std::thread::id, std::vector<fs::path>>& a,
                                std::pair<std::thread::id, std::vector<fs::path>>& b);
 
+    static bool compareResultData(std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>> & a,
+                                  std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>> & b);
 
 public:
     Grep(int args, char *argv[]);
@@ -24,6 +26,7 @@ public:
     void setDefaultArguments();
     void setUserArguments();
     void createLogFile();
+    void createResultFile();
 
     unsigned int getSearchedFiles() const;
     unsigned int getFilesWithPattern() const;

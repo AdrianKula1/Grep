@@ -21,8 +21,11 @@ Grep::Grep(int argc, char *argv[]) {
 
 void Grep::main() {
     this->threadPool->beginWork();
+    createResultFile();
     createLogFile();
 }
+
+
 
 void Grep::validateArguments() const {
     if(argc < this->minNumberOfArgsToRunTheProgram){
@@ -57,6 +60,32 @@ void Grep::setUserArguments() {
             this->numberOfThreads = noThreads;
         }
     }
+}
+
+void Grep::createResultFile() {
+    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> filePathToLineMap = threadPool->getfilePathToLineMap();
+
+    std::vector<std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>> resultDataVector;
+
+    for(auto &data : filePathToLineMap){
+        resultDataVector.emplace_back(data);
+    }
+
+    std::sort(resultDataVector.begin(), resultDataVector.end(), compareResultData);
+
+    std::ofstream resultFile(resultFileName);
+
+    if(!resultFile.good() || !resultFile.is_open()){
+        return;
+    }
+
+    for(auto &threadData: resultDataVector){
+        for(auto &pathData: threadData.second){
+            resultFile << threadData.first << ":" << pathData.first << ": " << pathData.second << std::endl;
+        }
+    }
+
+    resultFile.close();
 }
 
 void Grep::createLogFile() {
@@ -114,6 +143,13 @@ bool Grep::compareLogData(std::pair<std::thread::id, std::vector<fs::path>> &a,
                           std::pair<std::thread::id, std::vector<fs::path>> &b) {
     return a.second.size() > b.second.size();
 }
+
+bool Grep::compareResultData(std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>> &a,
+                             std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>> &b) {
+    return a.second.size() > b.second.size();
+}
+
+
 
 
 

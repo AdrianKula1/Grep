@@ -7,6 +7,7 @@
 #include<map>
 #include<filesystem>
 #include<condition_variable>
+#include<tuple>
 
 namespace fs = std::filesystem;
 
@@ -25,13 +26,16 @@ private:
     std::queue<fs::path> paths;
 
     std::map<std::thread::id, std::vector<fs::path>> threadIdToPathsMap;
+    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> filePathToLineMap;
 
-    std::mutex queueMutex;
-    std::mutex resultFileMutex;
+    std::mutex mutexQueue;
+    std::mutex mutexFilePathToLineMap;
 
     std::condition_variable emptyQueueCondition;
 
     bool allFilesFound=false;
+
+
 
 public:
 
@@ -42,11 +46,12 @@ public:
     void beginWork();
     void startWorkWithFile();
     void searchWithinFile(fs::path &pathToFile);
-    void saveLineToResultFile(fs::path &pathToFile, unsigned int searchedWordIndex, std::string& line);
+//    void saveLineToResultFile(fs::path &pathToFile, unsigned int searchedWordIndex, std::string& line);
     unsigned int getSearchedFiles() const;
     unsigned int getFilesWithPattern() const;
     unsigned int getPatternsNumber() const;
     std::map<std::thread::id, std::vector<fs::path>> getThreadIdToPathsMap() const;
+    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> getfilePathToLineMap() const;
 
 };
 

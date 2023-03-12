@@ -39,7 +39,7 @@ void ThreadPool::searchDirectory() {
     for(const fs::directory_entry& entry : fs::recursive_directory_iterator(startDirectory)){
         if(entry.is_regular_file()){
                 this->searchedFiles++;
-                std::unique_lock lock(queueMutex);
+                std::unique_lock lock(mutexQueue);
                 addPathToQueue(entry.path());
                 lock.unlock();
                 emptyQueueCondition.notify_one();
@@ -54,7 +54,7 @@ void ThreadPool::startWorkWithFile(){
     while(!allFilesFound || !paths.empty()){
         fs::path pathToFile;
         {
-            std::unique_lock lock(queueMutex);
+            std::unique_lock lock(mutexQueue);
             while(paths.empty()){
                 emptyQueueCondition.wait(lock);
             }
@@ -87,15 +87,15 @@ void ThreadPool::searchWithinFile(fs::path &pathToFile){
                 filesContainingPattern++;
             }
             patternsNumber++;
-            resultFileMutex.lock();
-            saveLineToResultFile(pathToFile, searchedWordIndex, line);
-            resultFileMutex.unlock();
+            mutexFilePathToLineMap.lock();
+            this->filePathToLineMap[pathToFile].emplace_back(searchedWordIndex, line);
+            mutexFilePathToLineMap.unlock();
         }
     }
     fileToSearch.close();
 }
 
-void ThreadPool::saveLineToResultFile(fs::path &pathToFile, unsigned int searchedWordIndex, std::string& line){
+/*void ThreadPool::saveLineToResultFile(fs::path &pathToFile, unsigned int searchedWordIndex, std::string& line){
     std::ofstream resultFile;
     resultFile.open(this->resultFileName, std::ios_base::app);
 
@@ -105,7 +105,7 @@ void ThreadPool::saveLineToResultFile(fs::path &pathToFile, unsigned int searche
     resultFile << pathToFile.string() << ':' << searchedWordIndex << ": " << line << std::endl;
 
     resultFile.close();
-}
+}*/
 
 void ThreadPool::addPathToQueue(const fs::path& pathToFile){
     this->paths.push(pathToFile);
@@ -125,6 +125,12 @@ unsigned int ThreadPool::getPatternsNumber() const{
 
 std::map<std::thread::id, std::vector<fs::path>> ThreadPool::getThreadIdToPathsMap() const{
     return threadIdToPathsMap;
+}
+
+
+
+std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> ThreadPool::getfilePathToLineMap() const {
+    return filePathToLineMap;
 }
 
 
