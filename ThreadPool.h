@@ -15,22 +15,20 @@ private:
     long noThreads;
     unsigned int searchedFiles=0, filesContainingPattern=0, patternsNumber=0;
 
-    std::string stringToFind;
-    std::string startingDirectory;
-    std::string resultFileName;
-    std::string startDirectory;
+    std::string stringToFind, startingDirectory, resultFileName, startDirectory;
 
     std::vector<std::thread> threads;
     std::thread directorySearcher;
-    std::queue<fs::path> paths;
-
-    std::map<std::thread::id, std::vector<fs::path>> threadIdToPathsMap;
-    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> filePathToLineMap;
 
     std::mutex mutexQueue;
     std::mutex mutexFilePathToLineMap;
 
+    std::queue<fs::path> paths;
+
     std::condition_variable emptyQueueCondition;
+
+    std::map<std::thread::id, std::vector<fs::path>> threadIdToPathsMap;
+    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> filePathToLineMap;
 
     bool allFilesFound=false;
 
