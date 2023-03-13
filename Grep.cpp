@@ -11,9 +11,10 @@ namespace fs=std::filesystem;
 Grep::Grep(int argc, char *argv[]) {
     this->argc=argc;
     this->argv = new std::string[argc+1];
-    for(int i=0; i<argc; i++) {
+
+    for(int i=0; i<argc; i++)
         this->argv[i] = (std::string) argv[i];
-    }
+
 
     validateArguments();
     setDefaultArguments();
@@ -28,9 +29,8 @@ void Grep::main() {
 }
 
 void Grep::validateArguments() const {
-    if(argc < this->minNumberOfArgsToRunTheProgram){
+    if(argc < this->minNumberOfArgsToRunTheProgram)
         throw std::runtime_error("The program has one obligatory parameter which is <pattern(string)>");
-    }
 }
 
 void Grep::setDefaultArguments() {
@@ -44,15 +44,15 @@ void Grep::setDefaultArguments() {
 
 void Grep::setUserArguments() {
     for(int i=2; i < argc; i+=2){
-        if(argv[i]=="-d" || argv[i]=="--dir" ){
+        if(argv[i]=="-d" || argv[i]=="--dir" )
             this->startDirectory =  argv[i + 1];
-        }
-        if(argv[i]== "-l" || argv[i]=="--log_file" ){
+
+        if(argv[i]== "-l" || argv[i]=="--log_file" )
             this->logFileName = argv[i + 1] + ".log";
-        }
-        if(argv[i]=="-r" || argv[i]=="--result_file" ){
+
+        if(argv[i]=="-r" || argv[i]=="--result_file" )
             this->resultFileName = argv[i + 1] + ".txt";
-        }
+
         if(argv[i]=="-t" || argv[i]=="--threads" ){
             char* p;
             long noThreads = strtol(&argv[i+1][0], &p, 10);
@@ -69,23 +69,24 @@ void Grep::createResultFile() {
 
     resultDataVectorType resultDataVector;
 
-    for(auto &data : filePathToLineMap){
+    for(auto &data : filePathToLineMap)
         resultDataVector.emplace_back(data);
-    }
+
 
     std::sort(resultDataVector.begin(), resultDataVector.end(),
               compareData<resultDataVectorItemType>);
 
     std::ofstream resultFile;
     resultFile.open(resultFileName);
-    if(!resultFile){
+
+    if(!resultFile)
         return;
-    }
+
 
     for(auto &threadData: resultDataVector){
-        for(auto &pathData: threadData.second){
+        for(auto &pathData: threadData.second)
             resultFile << threadData.first << ":" << pathData.first << ": " << pathData.second << std::endl;
-        }
+
     }
 
     resultFile.close();
@@ -98,24 +99,24 @@ void Grep::createLogFile() {
     using logDataVectorItemType = std::pair<std::thread::id, std::vector<fs::path>>;
 
     logDataVectorType logDataVector;
-    for(auto &data : threadIdToPathsMap){
+    for(auto &data : threadIdToPathsMap)
         logDataVector.emplace_back(data);
-    }
+
 
     std::sort(logDataVector.begin(), logDataVector.end(),
               compareData<logDataVectorItemType>);
 
     std::ofstream logFile;
     logFile.open(logFileName);
-    if(!logFile){
+
+    if(!logFile)
         return;
-    }
+
 
     for(auto &threadData: logDataVector){
         logFile << threadData.first << ": ";
-        for (auto &filename: threadData.second){
+        for (auto &filename: threadData.second)
             logFile << filename << ',' ;
-        }
         logFile << std::endl;
     }
 

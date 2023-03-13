@@ -1,6 +1,5 @@
 #include "ThreadPool.h"
 #include<fstream>
-#include <iostream>
 
 ThreadPool::ThreadPool(long noThreads, std::string &stringToFind, std::string &resultFileName, std::string& startDirectory) {
     this->noThreads=noThreads;
@@ -58,9 +57,10 @@ void ThreadPool::startWorkWithFile(){
         fs::path pathToFile;
         {
             std::unique_lock lock(mutexQueue);
-            while(paths.empty()){
+
+            while(paths.empty())
                 emptyQueueCondition.wait(lock);
-            }
+
             pathToFile = paths.front();
             paths.pop();
         }
@@ -69,7 +69,6 @@ void ThreadPool::startWorkWithFile(){
 }
 
 void ThreadPool::searchWithinFile(fs::path &pathToFile){
-
     std::ifstream fileToSearch;
     fileToSearch.open(pathToFile);
 
