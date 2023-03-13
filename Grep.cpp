@@ -64,14 +64,17 @@ void Grep::setUserArguments() {
 void Grep::createResultFile() {
     resultDataMapType filePathToLineMap = threadPool->getfilePathToLineMap();
 
-    std::vector<std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>> resultDataVector;
+    using resultDataVectorType = std::vector<std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>>;
+    using resultDataVectorItemType = std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>;
+
+    resultDataVectorType resultDataVector;
 
     for(auto &data : filePathToLineMap){
         resultDataVector.emplace_back(data);
     }
 
     std::sort(resultDataVector.begin(), resultDataVector.end(),
-              compareData<std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>>);
+              compareData<resultDataVectorItemType>);
 
     std::ofstream resultFile;
     resultFile.open(resultFileName);
@@ -91,13 +94,16 @@ void Grep::createResultFile() {
 void Grep::createLogFile() {
     logDataMapType threadIdToPathsMap = threadPool->getThreadIdToPathsMap();
 
-    std::vector<std::pair<std::thread::id, std::vector<fs::path>>> logDataVector;
+    using logDataVectorType = std::vector<std::pair<std::thread::id, std::vector<fs::path>>>;
+    using logDataVectorItemType = std::pair<std::thread::id, std::vector<fs::path>>;
+
+    logDataVectorType logDataVector;
     for(auto &data : threadIdToPathsMap){
         logDataVector.emplace_back(data);
     }
 
     std::sort(logDataVector.begin(), logDataVector.end(),
-              compareData<std::pair<std::thread::id, std::vector<fs::path>>>);
+              compareData<logDataVectorItemType>);
 
     std::ofstream logFile;
     logFile.open(logFileName);
