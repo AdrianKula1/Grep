@@ -85,7 +85,7 @@ void Grep::createResultFile() {
 
     for(auto &threadData: resultDataVector){
         for(auto &pathData: threadData.second)
-            resultFile << threadData.first << ":" << pathData.first << ": " << pathData.second << std::endl;
+            resultFile << threadData.first.string() << ":" << pathData.first << ": " << pathData.second << std::endl;
 
     }
 
