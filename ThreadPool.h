@@ -10,6 +10,9 @@
 
 namespace fs = std::filesystem;
 
+using logDataMapType = std::map<std::thread::id, std::vector<fs::path>>;
+using resultDataMapType = std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>>;
+
 class ThreadPool {
 private:
     long noThreads;
@@ -30,8 +33,8 @@ private:
 
     std::condition_variable emptyQueueCondition;
 
-    std::map<std::thread::id, std::vector<fs::path>> threadIdToPathsMap;
-    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> filePathToLineMap;
+    logDataMapType threadIdToPathsMap;
+    resultDataMapType filePathToLineMap;
 
     bool finishedSearchingForFiles=false;
 
@@ -48,8 +51,8 @@ public:
     unsigned int getSearchedFiles() const;
     unsigned int getFilesWithPattern() const;
     unsigned int getPatternsNumber() const;
-    std::map<std::thread::id, std::vector<fs::path>> getThreadIdToPathsMap() const;
-    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> getfilePathToLineMap() const;
+    logDataMapType getThreadIdToPathsMap() const;
+    resultDataMapType getfilePathToLineMap() const;
 
 };
 

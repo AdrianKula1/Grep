@@ -62,7 +62,7 @@ void Grep::setUserArguments() {
 }
 
 void Grep::createResultFile() {
-    std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> filePathToLineMap = threadPool->getfilePathToLineMap();
+    resultDataMapType filePathToLineMap = threadPool->getfilePathToLineMap();
 
     std::vector<std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>> resultDataVector;
 
@@ -89,7 +89,7 @@ void Grep::createResultFile() {
 }
 
 void Grep::createLogFile() {
-    std::map<std::thread::id, std::vector<fs::path>> threadIdToPathsMap = threadPool->getThreadIdToPathsMap();
+    logDataMapType threadIdToPathsMap = threadPool->getThreadIdToPathsMap();
 
     std::vector<std::pair<std::thread::id, std::vector<fs::path>>> logDataVector;
     for(auto &data : threadIdToPathsMap){

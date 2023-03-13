@@ -123,10 +123,10 @@ unsigned int ThreadPool::getPatternsNumber() const{
     return this->patternsNumber;
 }
 
-std::map<std::thread::id, std::vector<fs::path>> ThreadPool::getThreadIdToPathsMap() const{
+logDataMapType ThreadPool::getThreadIdToPathsMap() const{
     return threadIdToPathsMap;
 }
 
-std::map<fs::path, std::vector<std::pair<unsigned int, std::string>>> ThreadPool::getfilePathToLineMap() const {
+resultDataMapType ThreadPool::getfilePathToLineMap() const {
     return filePathToLineMap;
 }
