@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 
-#include "Grep.h"
+#include "classes/Grep.h"
 
 namespace fs=std::filesystem;
 
