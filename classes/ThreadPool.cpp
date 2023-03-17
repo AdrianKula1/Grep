@@ -1,5 +1,6 @@
 #include "ThreadPool.h"
 #include<fstream>
+#include<iostream>
 
 ThreadPool::ThreadPool(long newNoThreads, std::string &newStringToFind, std::string &newResultFileName, std::string& newStartDirectory) {
     noThreads=newNoThreads;
@@ -42,11 +43,11 @@ void ThreadPool::searchDirectory() {
     for(const fs::directory_entry& entry : fs::recursive_directory_iterator(startDirectory)){
         if(entry.is_regular_file()){
             {
-                std::unique_lock lock(mutexQueue);
+                std::unique_lock<std::mutex> lock(mutexQueue);
                 searchedFiles++;
-                addPathToQueue(entry.path());
+                paths.push(entry.path());
                 lock.unlock();
-                emptyQueueCondition.notify_one();
+                emptyQueueCondition.notify_all();
             }
         }
     }
@@ -59,7 +60,7 @@ void ThreadPool::startWorkWithFile(){
         threadIdToPathsMap[std::this_thread::get_id()];
     }
 
-    while(!finishedSearchingForFiles || !paths.empty()){
+    while(!finishedSearchingForFiles && !paths.empty()){
         fs::path pathToFile;
         {
             std::unique_lock<std::mutex> queueLock(mutexQueue);
@@ -70,6 +71,7 @@ void ThreadPool::startWorkWithFile(){
             pathToFile = paths.front();
             paths.pop();
         }
+
         searchWithinFile(pathToFile);
     }
 }
@@ -86,7 +88,7 @@ void ThreadPool::searchWithinFile(fs::path &pathToFile){
         threadIdToPathsMap[std::this_thread::get_id()].push_back(pathToFile.filename());
     }
 
-    bool isSearchedPatternFound = false;
+/*    bool isSearchedPatternFound = false;
     std::string line;
     unsigned int searchedPhraseIndex = 0;
 
@@ -111,7 +113,7 @@ void ThreadPool::searchWithinFile(fs::path &pathToFile){
                 filePathToLineMap[pathToFile].emplace_back(searchedPhraseIndex, line);
             }
         }
-    }
+    }*/
     fileToSearch.close();
 }
 
