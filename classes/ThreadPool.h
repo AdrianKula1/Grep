@@ -40,7 +40,7 @@ private:
 
 public:
 
-    ThreadPool(long noThreads, std::string& stringToFind, std::string& resultFileName, std::string& startDirectory);
+    ThreadPool(long newNoThreads, std::string& newStringToFind, std::string& newResultFileName, std::string& newStartDirectory);
     void resetResultFile();
     void searchDirectory();
     void addPathToQueue(const fs::path& pathToFile);

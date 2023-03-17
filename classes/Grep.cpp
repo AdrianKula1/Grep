@@ -34,18 +34,18 @@ void Grep::validateArguments() const {
 }
 
 void Grep::setDefaultArguments() {
+    this->minNumberOfArgsToRunTheProgram = 2;
     this->stringToFind = (std::string)argv[1];
     this->startDirectory = fs::current_path().string();
     this->logFileName = std::filesystem::path(argv[0]).filename().string() + ".log";
     this->resultFileName = std::filesystem::path(argv[0]).filename().string() + ".txt";
     this->numberOfThreads = 4;
-
 }
 
 void Grep::setUserArguments() {
     for(int i=2; i < argc; i+=2){
         if(argv[i]=="-d" || argv[i]=="--dir" )
-            this->startDirectory =  argv[i + 1];
+            this->startDirectory = argv[i + 1];
 
         if(argv[i]== "-l" || argv[i]=="--log_file" )
             this->logFileName = argv[i + 1] + ".log";
@@ -81,7 +81,6 @@ void Grep::createResultFile() {
 
     if(!resultFile)
         return;
-
 
     for(auto &threadData: resultDataVector){
         for(auto &pathData: threadData.second)
