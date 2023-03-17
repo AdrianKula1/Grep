@@ -1,6 +1,5 @@
 #include "ThreadPool.h"
 #include<fstream>
-#include<iostream>
 
 ThreadPool::ThreadPool(long newNoThreads, std::string &newStringToFind, std::string &newResultFileName, std::string& newStartDirectory) {
     noThreads=newNoThreads;
@@ -43,7 +42,6 @@ void ThreadPool::searchDirectory() {
             {
                 searchedFiles++;
                 paths.push(entry.path());
-
             }
         }
     }
@@ -86,7 +84,7 @@ void ThreadPool::searchWithinFile(fs::path &pathToFile){
     unsigned int searchedPhraseIndex = 0;
 
     while (std::getline(fileToSearch, line)) {
-        searchedPhraseIndex = line.find(stringToFind);
+        searchedPhraseIndex = line.find(stringToFind, 0);
         bool phraseFound = searchedPhraseIndex != std::string::npos;
 
         if (phraseFound && !isSearchedPatternFound) {
@@ -96,7 +94,7 @@ void ThreadPool::searchWithinFile(fs::path &pathToFile){
             filesContainingPattern++;
         }
 
-        if (phraseFound) {
+        while (searchedPhraseIndex != std::string::npos) {
             {
                 std::lock_guard<std::mutex> patternsNumberGuard(mutexPatternsNumber);
                 patternsNumber++;
@@ -105,6 +103,7 @@ void ThreadPool::searchWithinFile(fs::path &pathToFile){
                 std::lock_guard<std::mutex> filePathToLineMapGuard(mutexFilePathToLineMap);
                 filePathToLineMap[pathToFile].emplace_back(searchedPhraseIndex, line);
             }
+            searchedPhraseIndex = line.find(stringToFind, searchedPhraseIndex+1);
         }
     }
     fileToSearch.close();
