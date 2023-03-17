@@ -28,12 +28,10 @@ void ThreadPool::resetResultFile() {
 }
 
 void ThreadPool::beginWork(){
-    directorySearcher = std::thread(&ThreadPool::searchDirectory, this);
+    searchDirectory();
 
     for(int i=0; i<noThreads; i++)
         threads.emplace_back(&ThreadPool::startWorkWithFile, this);
-
-    directorySearcher.join();
 
     for(int i=0; i<noThreads; i++)
         threads[i].join();
@@ -44,14 +42,11 @@ void ThreadPool::searchDirectory() {
         if(entry.is_regular_file()){
             {
                 searchedFiles++;
-                std::unique_lock<std::mutex> lock(mutexQueue);
                 paths.push(entry.path());
-                lock.unlock();
-                emptyQueueCondition.notify_all();
+
             }
         }
     }
-    finishedSearchingForFiles=true;
 }
 
 void ThreadPool::startWorkWithFile(){
@@ -60,16 +55,14 @@ void ThreadPool::startWorkWithFile(){
         threadIdToPathsMap[std::this_thread::get_id()];
     }
 
-    while(!finishedSearchingForFiles && !paths.empty()){
+    while(!paths.empty()){
         fs::path pathToFile;
         {
             std::unique_lock<std::mutex> queueLock(mutexQueue);
-
-            while(paths.empty())
-                emptyQueueCondition.wait(queueLock);
-
-            pathToFile = paths.front();
-            paths.pop();
+            if(!paths.empty()) {
+                pathToFile = paths.front();
+                paths.pop();
+            }
         }
 
         searchWithinFile(pathToFile);
@@ -88,7 +81,7 @@ void ThreadPool::searchWithinFile(fs::path &pathToFile){
         threadIdToPathsMap[std::this_thread::get_id()].push_back(pathToFile.filename());
     }
 
-/*    bool isSearchedPatternFound = false;
+    bool isSearchedPatternFound = false;
     std::string line;
     unsigned int searchedPhraseIndex = 0;
 
@@ -113,12 +106,8 @@ void ThreadPool::searchWithinFile(fs::path &pathToFile){
                 filePathToLineMap[pathToFile].emplace_back(searchedPhraseIndex, line);
             }
         }
-    }*/
+    }
     fileToSearch.close();
-}
-
-void ThreadPool::addPathToQueue(const fs::path& pathToFile){
-    paths.push(pathToFile);
 }
 
 unsigned int ThreadPool::getSearchedFiles() const{

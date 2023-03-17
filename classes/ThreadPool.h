@@ -21,7 +21,6 @@ private:
     std::string stringToFind, startingDirectory, resultFileName, startDirectory;
 
     std::vector<std::thread> threads;
-    std::thread directorySearcher;
 
     std::mutex mutexQueue;
     std::mutex mutexFilePathToLineMap;
@@ -36,14 +35,11 @@ private:
     logDataMapType threadIdToPathsMap;
     resultDataMapType filePathToLineMap;
 
-    bool finishedSearchingForFiles=false;
-
 public:
 
     ThreadPool(long newNoThreads, std::string& newStringToFind, std::string& newResultFileName, std::string& newStartDirectory);
     void resetResultFile();
     void searchDirectory();
-    void addPathToQueue(const fs::path& pathToFile);
     void beginWork();
     void startWorkWithFile();
     void searchWithinFile(fs::path &pathToFile);
