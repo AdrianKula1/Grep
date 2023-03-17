@@ -6,7 +6,7 @@
 
 class Grep {
 private:
-    int minNumberOfArgsToRunTheProgram = 2;
+    int minNumberOfArgsToRunTheProgram;
     int argc;
     std::string *argv;
 

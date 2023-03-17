@@ -3,4 +3,4 @@ project(TietoEvryTask)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(TietoEvryTask main.cpp Grep.cpp Grep.h ThreadPool.cpp ThreadPool.h)
+add_executable(TietoEvryTask main.cpp classes/Grep.cpp classes/Grep.h classes/ThreadPool.cpp classes/ThreadPool.h)
