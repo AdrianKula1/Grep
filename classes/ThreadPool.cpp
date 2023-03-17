@@ -54,17 +54,18 @@ void ThreadPool::searchDirectory() {
 }
 
 void ThreadPool::startWorkWithFile(){
-    mutexThreadIdToPathsMap.lock();
-    threadIdToPathsMap[std::this_thread::get_id()];
-    mutexThreadIdToPathsMap.unlock();
+    {
+        std::lock_guard<std::mutex> threadIdToPathsMapGuard(mutexThreadIdToPathsMap);
+        threadIdToPathsMap[std::this_thread::get_id()];
+    }
 
     while(!finishedSearchingForFiles || !paths.empty()){
         fs::path pathToFile;
         {
-            std::unique_lock lock(mutexQueue);
+            std::unique_lock<std::mutex> queueLock(mutexQueue);
 
             while(paths.empty())
-                emptyQueueCondition.wait(lock);
+                emptyQueueCondition.wait(queueLock);
 
             pathToFile = paths.front();
             paths.pop();
