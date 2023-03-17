@@ -43,8 +43,8 @@ void ThreadPool::searchDirectory() {
     for(const fs::directory_entry& entry : fs::recursive_directory_iterator(startDirectory)){
         if(entry.is_regular_file()){
             {
-                std::unique_lock<std::mutex> lock(mutexQueue);
                 searchedFiles++;
+                std::unique_lock<std::mutex> lock(mutexQueue);
                 paths.push(entry.path());
                 lock.unlock();
                 emptyQueueCondition.notify_all();
