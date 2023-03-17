@@ -6,11 +6,21 @@
 
 class Grep {
 private:
+    using resultDataVectorType = std::vector<std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>>;
+    using resultDataVectorItemType = std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>;
+
+    using logDataVectorType = std::vector<std::pair<std::thread::id, std::vector<fs::path>>>;
+    using logDataVectorItemType = std::pair<std::thread::id, std::vector<fs::path>>;
+
     int minNumberOfArgsToRunTheProgram;
     int argc;
     std::string *argv;
 
-    std::string stringToFind, startDirectory, resultFileName, logFileName;
+    std::string stringToFind;
+    std::string startDirectory;
+    std::string resultFileName;
+    std::string logFileName;
+
     long numberOfThreads;
 
     ThreadPool *threadPool;

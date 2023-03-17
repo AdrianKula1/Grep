@@ -16,9 +16,14 @@ using resultDataMapType = std::map<fs::path, std::vector<std::pair<unsigned int,
 class ThreadPool {
 private:
     long noThreads;
-    unsigned int searchedFiles=0, filesContainingPattern=0, patternsNumber=0;
+    unsigned int searchedFiles;
+    unsigned int filesContainingPattern;
+    unsigned int patternsNumber;
 
-    std::string stringToFind, startingDirectory, resultFileName, startDirectory;
+    std::string stringToFind;
+    std::string startingDirectory;
+    std::string resultFileName;
+    std::string startDirectory;
 
     std::vector<std::thread> threads;
 
@@ -32,8 +37,10 @@ private:
 
     std::condition_variable emptyQueueCondition;
 
-    logDataMapType threadIdToPathsMap;
+    //Maps used for storing results and logs
     resultDataMapType filePathToLineMap;
+    logDataMapType threadIdToPathsMap;
+
 
 public:
 

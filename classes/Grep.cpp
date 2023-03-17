@@ -8,7 +8,7 @@
 namespace fs=std::filesystem;
 
 Grep::Grep(int argc, char *argv[]) {
-    this->argc=argc;
+    this->argc = argc;
     this->argv = new std::string[argc+1];
 
     for(int i=0; i<argc; i++)
@@ -43,16 +43,16 @@ void Grep::setDefaultArguments() {
 
 void Grep::setUserArguments() {
     for(int i=2; i < argc; i+=2){
-        if(argv[i]=="-d" || argv[i]=="--dir" )
+        if(argv[i] == "-d" || argv[i] == "--dir" )
             this->startDirectory = argv[i + 1];
 
-        if(argv[i]== "-l" || argv[i]=="--log_file" )
+        if(argv[i] == "-l" || argv[i] == "--log_file" )
             this->logFileName = argv[i + 1] + ".log";
 
-        if(argv[i]=="-r" || argv[i]=="--result_file" )
+        if(argv[i] == "-r" || argv[i] == "--result_file" )
             this->resultFileName = argv[i + 1] + ".txt";
 
-        if(argv[i]=="-t" || argv[i]=="--threads" ){
+        if(argv[i] == "-t" || argv[i] == "--threads" ){
             char* p;
             long noThreads = strtol(&argv[i+1][0], &p, 10);
             this->numberOfThreads = noThreads;
@@ -63,14 +63,10 @@ void Grep::setUserArguments() {
 void Grep::createResultFile() {
     resultDataMapType filePathToLineMap = threadPool->getfilePathToLineMap();
 
-    using resultDataVectorType = std::vector<std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>>;
-    using resultDataVectorItemType = std::pair<fs::path, std::vector<std::pair<unsigned int, std::string>>>;
-
     resultDataVectorType resultDataVector;
 
     for(auto &data : filePathToLineMap)
         resultDataVector.emplace_back(data);
-
 
     std::sort(resultDataVector.begin(), resultDataVector.end(),
               compareData<resultDataVectorItemType>);
@@ -91,9 +87,6 @@ void Grep::createResultFile() {
 
 void Grep::createLogFile() {
     logDataMapType threadIdToPathsMap = threadPool->getThreadIdToPathsMap();
-
-    using logDataVectorType = std::vector<std::pair<std::thread::id, std::vector<fs::path>>>;
-    using logDataVectorItemType = std::pair<std::thread::id, std::vector<fs::path>>;
 
     logDataVectorType logDataVector;
     for(auto &data : threadIdToPathsMap)

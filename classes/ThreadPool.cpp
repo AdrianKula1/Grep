@@ -2,16 +2,16 @@
 #include<fstream>
 
 ThreadPool::ThreadPool(long newNoThreads, std::string &newStringToFind, std::string &newResultFileName, std::string& newStartDirectory) {
-    noThreads=newNoThreads;
+    noThreads = newNoThreads;
     threads.reserve(noThreads);
 
-    stringToFind=newStringToFind;
-    resultFileName=newResultFileName;
-    startDirectory=newStartDirectory;
+    stringToFind = newStringToFind;
+    resultFileName = newResultFileName;
+    startDirectory = newStartDirectory;
 
-    searchedFiles=0;
-    filesContainingPattern=0;
-    patternsNumber=0;
+    searchedFiles = 0;
+    filesContainingPattern = 0;
+    patternsNumber = 0;
 
     resetResultFile();
 }
@@ -39,10 +39,8 @@ void ThreadPool::beginWork(){
 void ThreadPool::searchDirectory() {
     for(const fs::directory_entry& entry : fs::recursive_directory_iterator(startDirectory)){
         if(entry.is_regular_file()){
-            {
-                searchedFiles++;
-                paths.push(entry.path());
-            }
+            searchedFiles++;
+            paths.push(entry.path());
         }
     }
 }
